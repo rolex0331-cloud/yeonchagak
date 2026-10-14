@@ -26,6 +26,13 @@
 | 검색 등록 | Google Search Console: URL 접두어 속성, HTML 태그를 index.html에 반영(2026-10-14). 네이버 서치어드바이저: 호스트 단위만 허용 → 대표 사이트 저장소 rolex0331-cloud.github.io 생성, 루트 index.html에 확인 태그, 소유확인·사이트맵 제출 완료(2026-10-14, 사용자 보고) |
 | 실제 매출 | 없음 |
 
+## 2026-10-14 검토 대응
+- P0 계산 누락 수정 + 독립 완전 탐색 회귀 테스트, P1 여행 기간·출발 도시·숙소 ID·모바일 우선순위 반영. 상세: docs/review-response-2026-10-14.md
+- 배포: Actions test-and-deploy 38517021861 (test·deploy·운영 E2E 통과)
+- 운영 수동 확인: ?y=2026&b=1 → 12/24~27 4일, 타이베이 항공권·숙소 링크가 해당 날짜·도시 페이지로 도착
+- 호스팅 이전(Cloudflare Pages 등)은 사용자 결정 대기. 무료 플랜 상업 이용은 공식 약관 확인 필요
+- 경쟁: 몇이지·연차의 신이 연차 최적화를 이미 제공 → 차별점은 여행 기간·목적지 선택과 예약 연결
+
 ## 파일 지도
 - `assets/engine.js` 최적화 엔진 / `assets/holidays.js` 공휴일 데이터 / `assets/config.js` 제휴·측정 설정
 - `assets/app.js` 화면 / `assets/state.js` 공유 링크 / `assets/links.js` 여행 링크
