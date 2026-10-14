@@ -8,7 +8,7 @@ permissions:
   issues: write
 jobs:
   holidays:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
         if: steps.check.outputs.code == '2'
         run: echo "::warning::공개 캘린더를 가져오지 못해 이번 주 점검을 건너뜁니다."
   live-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -54,4 +54,5 @@ jobs:
         if: steps.e2e.outcome == 'failure'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh issue create --title "운영 사이트 점검 실패 $(date -u +%F)" --body "주간 E2E 점검이 실패했습니다. Actions 로그: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        run: |
+          gh issue create --title "운영 사이트 점검 실패 $(date -u +%F)" --body "주간 E2E 점검이 실패했습니다. 로그 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -2,10 +2,7 @@
 import { AFFILIATE, affiliateEnabled } from './config.js';
 
 function withAffiliate(params) {
-  if (affiliateEnabled()) {
-    params.set('Allianceid', AFFILIATE.allianceId);
-    params.set('SID', AFFILIATE.sid);
-  }
+  if (affiliateEnabled()) for (const [k, v] of Object.entries(AFFILIATE.params)) params.set(k, String(v));
   return params;
 }
 

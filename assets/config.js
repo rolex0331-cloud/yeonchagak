@@ -8,15 +8,15 @@ export const SITE = {
   contact: 'https://github.com/rolex0331-cloud/yeonchagak/issues',
 };
 
-// 트립닷컴 제휴(Trip.com Affiliate) 승인 후 발급되는 값.
-// 승인 전에는 비워 둔다. 비어 있으면 제휴 고지도 표시하지 않는다.
+// 트립닷컴 제휴(Trip.com Affiliate) 승인 후, 제휴 대시보드에서 만든 링크의 추적용 쿼리 파라미터를
+// 그대로 params에 넣는다 (예: { Allianceid: '123', SID: '456' } — 실제 이름은 대시보드 링크 기준).
+// 비어 있으면 일반 검색 링크로 동작하고 제휴 고지도 표시하지 않는다.
 export const AFFILIATE = {
   provider: '트립닷컴',
-  allianceId: '',
-  sid: '',
+  params: {},
 };
 
-export const affiliateEnabled = () => Boolean(AFFILIATE.allianceId && AFFILIATE.sid);
+export const affiliateEnabled = () => Object.keys(AFFILIATE.params).length > 0;
 
 // GoatCounter 사이트 코드 (예: 'yeonchagak' → https://yeonchagak.goatcounter.com).
 // 비어 있으면 어떤 분석 요청도 보내지 않는다.

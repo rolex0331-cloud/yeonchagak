@@ -157,7 +157,10 @@ function run({ scroll = false, userAction = false } = {}) {
   history.replaceState(null, '', `${location.pathname}?${qs}`);
   render();
   $('results').hidden = false;
-  if (userAction) track('plan_run');
+  if (userAction && !run._tracked) {
+    run._tracked = true; // 조건을 직접 바꿔 계산한 방문을 1회만 집계
+    track('plan_run');
+  }
   if (scroll) $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -365,13 +368,13 @@ $('planner').addEventListener('submit', (e) => {
   run({ scroll: true, userAction: true });
 });
 
-document.querySelectorAll('input[name=goal]').forEach((r) => r.addEventListener('change', () => run()));
+document.querySelectorAll('input[name=goal]').forEach((r) => r.addEventListener('change', () => run({ userAction: true })));
 document.querySelectorAll('.step').forEach((b) =>
   b.addEventListener('click', () => {
     const input = $('budget');
     const v = Math.min(40, Math.max(0, (Number(input.value) || 0) + Number(b.dataset.step)));
     input.value = v;
-    run();
+    run({ userAction: true });
   })
 );
 
@@ -382,11 +385,11 @@ document.querySelectorAll('.step').forEach((b) =>
       $('end').value = '';
     }
     if (id === 'holidaysOff') $('substituteOff').disabled = !$('holidaysOff').checked;
-    run();
+    run({ userAction: true });
   })
 );
 $('budget').addEventListener('input', () => {
-  if ($('budget').value.trim() !== '') run();
+  if ($('budget').value.trim() !== '') run({ userAction: true });
 });
 
 document.querySelector('.advanced').addEventListener('click', (e) => {
@@ -409,12 +412,12 @@ document.querySelector('.advanced').addEventListener('click', (e) => {
       input.value = '';
     }
     renderTags();
-    run();
+    run({ userAction: true });
   }
   if (rm) {
     state[rm.dataset.remove].splice(Number(rm.dataset.idx), 1);
     renderTags();
-    run();
+    run({ userAction: true });
   }
 });
 

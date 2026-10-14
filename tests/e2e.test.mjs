@@ -204,3 +204,37 @@ test('콘텐츠 페이지와 404', async () => {
   assert.match(await text(page, 'h1'), /찾을 수 없습니다/);
   await page.close();
 });
+
+test('제휴·측정 설정을 넣으면: 고지 표시, 링크에 파라미터, 이벤트에 입력값 미포함', async () => {
+  const page = await browser.newPage();
+  await page.setRequestInterception(true);
+  const counted = [];
+  await page.exposeFunction('__count', (v) => counted.push(v));
+  page.on('request', async (req) => {
+    const url = req.url();
+    if (url.endsWith('/assets/config.js')) {
+      const res = await fetch(url);
+      let body = await res.text();
+      body = body.replace('params: {}', "params: { Allianceid: 'TESTAID', SID: 'TESTSID' }").replace("goatcounterCode: ''", "goatcounterCode: 'test'");
+      return req.respond({ status: 200, contentType: 'text/javascript', body });
+    }
+    if (url.startsWith('https://gc.zgo.at/')) {
+      return req.respond({ status: 200, contentType: 'text/javascript', body: 'window.goatcounter={count:(o)=>window.__count(JSON.stringify(o))};' });
+    }
+    req.continue();
+  });
+  await page.goto(BASE + '?y=2027&b=2', { waitUntil: 'networkidle0' });
+  assert.equal(await page.$eval('#aff-note', (el) => el.hidden), false);
+  assert.match(await text(page, '#aff-note'), /제휴 링크/);
+  const a = await page.$eval('#plan > li:first-child [data-out=flight]', (el) => ({ href: el.href, rel: el.rel }));
+  assert.equal(new URL(a.href).searchParams.get('Allianceid'), 'TESTAID');
+  assert.match(a.rel, /sponsored/);
+  await page.click('#dl-ics');
+  await page.click('#holidaysOff');
+  await new Promise((r) => setTimeout(r, 300));
+  const paths = counted.map((c) => JSON.parse(c).path);
+  assert.ok(paths.includes('event/ics_download'), paths.join(','));
+  assert.ok(paths.includes('event/plan_run'), paths.join(','));
+  assert.ok(counted.every((c) => !/2027-|\d{4}-\d{2}-\d{2}/.test(c)), '이벤트에 날짜·입력값 없음');
+  await page.close();
+});

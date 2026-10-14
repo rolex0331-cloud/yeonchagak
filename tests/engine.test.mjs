@@ -4,7 +4,7 @@ import { plan, toDayNum, fromDayNum, weekdayOf, toICS, leaveRequestText, normali
 import { HOLIDAYS } from '../assets/holidays.js';
 import { encodeState, decodeState, defaultState } from '../assets/state.js';
 import { flightUrl, hotelUrl } from '../assets/links.js';
-import { DESTINATIONS } from '../assets/config.js';
+import { DESTINATIONS, AFFILIATE } from '../assets/config.js';
 
 const Y = { start: '2027-01-01', end: '2027-12-31' };
 
@@ -203,7 +203,7 @@ test('여행 링크: 날짜 포함, 제휴 미설정 시 제휴 파라미터 없
   assert.equal(f.hostname, 'kr.trip.com');
   assert.equal(f.searchParams.get('ddate'), '2027-09-11');
   assert.equal(f.searchParams.get('rdate'), '2027-09-19');
-  assert.equal(f.searchParams.get('Allianceid'), null);
+  assert.equal([...f.searchParams.keys()].join(','), 'dcity,acity,ddate,rdate,triptype,class,quantity,locale,curr');
   const h = new URL(hotelUrl(tyo, '2027-09-11', '2027-09-19'));
   assert.equal(h.searchParams.get('cityId'), '228');
   assert.equal(hotelUrl(DESTINATIONS.find((d) => d.id === 'fuk'), '2027-09-11', '2027-09-19'), null);
@@ -222,4 +222,15 @@ test('공휴일 점검 스크립트: 차이 감지와 알려진 차이 제외', 
   const next = Array.from({ length: 16 }, (_, i) => ({ date: `2028-01-${String(i + 1).padStart(2, '0')}`, summary: 'x' }));
   assert.equal(compare([...ev, ...next], table, new Date('2026-10-14')).length, 1);
   assert.equal(compare([...ev, ...next], table, new Date('2027-07-01')).length, 2);
+});
+
+test('제휴 파라미터 설정 시 링크에 붙는다', () => {
+  AFFILIATE.params = { Allianceid: 'A1', SID: 'S1' };
+  try {
+    const u = new URL(flightUrl(DESTINATIONS[0], '2027-09-11', '2027-09-19'));
+    assert.equal(u.searchParams.get('Allianceid'), 'A1');
+    assert.equal(u.searchParams.get('SID'), 'S1');
+  } finally {
+    AFFILIATE.params = {};
+  }
 });
