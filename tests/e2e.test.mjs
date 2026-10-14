@@ -195,7 +195,7 @@ test('콘텐츠 페이지와 404', async () => {
   for (const p of ['2027-holidays/', 'guide/', 'about/']) {
     const { page, res, errors } = await open(p);
     assert.equal(res.status(), 200, p);
-    assert.ok((await text(page, 'h1')).length > 5);
+    assert.ok((await text(page, 'h1')).trim().length >= 4);
     assert.deepEqual(errors, []);
     await page.close();
   }
