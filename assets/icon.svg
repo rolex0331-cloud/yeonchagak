@@ -1,13 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="15" fill="#0A5BD8"/>
-  <rect x="4" y="44" width="15" height="10" rx="4" fill="#FF6A55"/>
-  <rect x="21" y="38" width="15" height="10" rx="4" fill="#3EE0B5"/>
-  <rect x="38" y="44" width="15" height="10" rx="4" fill="#FF6A55"/>
-  <g transform="translate(42 20) rotate(-40) scale(1.7)" fill="#FFFFFF">
-    <path d="M-7.5 0 C-7.5 -1.1 -6.5 -1.4 -5.5 -1.4 L5.2 -1.4 C7.2 -1.4 8.6 -0.7 8.6 0 C8.6 0.7 7.2 1.4 5.2 1.4 L-5.5 1.4 C-6.5 1.4 -7.5 1.1 -7.5 0 Z"/>
-    <path d="M-0.6 -1.2 L-3.8 -8.2 L-1.6 -8.2 L4.2 -1.2 Z"/>
-    <path d="M-0.6 1.2 L-3.8 8.2 L-1.6 8.2 L4.2 1.2 Z"/>
-    <path d="M-5.6 -1 L-7.6 -4.4 L-6.3 -4.4 L-3.8 -1 Z"/>
-    <path d="M-5.6 1 L-7.6 4.4 L-6.3 4.4 L-3.8 1 Z"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#0D1726"/><ellipse cx="18" cy="42" rx="13" ry="9.5" fill="#F2554A"/><rect x="33" y="33" width="24" height="18" rx="5.5" fill="#12B886"/><g transform="translate(44 17) rotate(-50) scale(1.6)" fill="#FFC547"> <path d="M-7.5 0 C-7.5 -1.1 -6.5 -1.4 -5.5 -1.4 L5.2 -1.4 C7.2 -1.4 8.6 -0.7 8.6 0 C8.6 0.7 7.2 1.4 5.2 1.4 L-5.5 1.4 C-6.5 1.4 -7.5 1.1 -7.5 0 Z"/> <path d="M-0.6 -1.2 L-3.8 -8.2 L-1.6 -8.2 L4.2 -1.2 Z"/> <path d="M-0.6 1.2 L-3.8 8.2 L-1.6 8.2 L4.2 1.2 Z"/> <path d="M-5.6 -1 L-7.6 -4.4 L-6.3 -4.4 L-3.8 -1 Z"/> <path d="M-5.6 1 L-7.6 4.4 L-6.3 4.4 L-3.8 1 Z"/></g></svg>

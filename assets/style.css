@@ -355,3 +355,7 @@ input[type=date] { width: auto; max-width: 100%; flex: 1 1 140px; }
   .toggles { gap: 4px 18px; }
 }
 .doc-top .doc p.lead { color: #b7c2d3; }
+.logo-svg { height: 40px; }
+@media (max-width: 520px) { .logo-svg { height: 34px; } }
+.hero .logo-svg .fly, .doc-top .logo-svg .fly { fill: var(--amber); }
+.hero .logo-svg .fly-path, .doc-top .logo-svg .fly-path { stroke: var(--amber); }
