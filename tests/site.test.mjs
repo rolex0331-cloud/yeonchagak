@@ -8,7 +8,7 @@ import { HOLIDAYS } from '../assets/holidays.js';
 import { weekdayOf, isValidDate } from '../assets/engine.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const SKIP = new Set(['node_modules', '.git', 'tests', 'docs', 'scripts', '.github', 'dist']);
+const SKIP = new Set(['node_modules', '.git', 'tests', 'docs', 'scripts', '.github', 'dist', '_site']);
 
 function walk(dir, out = []) {
   for (const name of readdirSync(dir)) {
