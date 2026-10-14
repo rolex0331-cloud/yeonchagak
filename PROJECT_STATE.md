@@ -10,6 +10,7 @@
 - 호스팅: GitHub Pages (공개 저장소 rolex0331-cloud/yeonchagak), 추가 비용 0원
 - 구조: 서버·DB·로그인 없음. 계산은 브라우저 안. 운영 코드 외부 의존성 0, 테스트 의존성 puppeteer-core 25.11.0
 - 기존 프로젝트(premove, tidraq-*, my-stock-calculator)는 건드리지 않음
+- 대표 주소 저장소 rolex0331-cloud.github.io: 네이버 확인 태그 + 연차각 안내 첫 페이지 + robots.txt(연차각 sitemap 지정). 확인 태그를 지우면 네이버 소유 확인이 풀림
 
 ## 현재 상태
 | 항목 | 상태 |
@@ -20,7 +21,7 @@
 | 자동 관리 | test-and-deploy(푸시 시), weekly-ops(매주 월, 수동 실행으로 동작 확인) 등록·가동 |
 | 제휴 | **신청 완료·심사 중** (2026-10-14 트립닷컴 제휴 파트너·개인·콘텐츠 관련·CPS로 신청, USD 정산). 링크 미연결: config의 AFFILIATE.params 비어 있음, 고지 숨김 |
 | 측정 | **미연결** (ANALYTICS.goatcounterCode 비어 있음, 요청 0건) |
-| 검색 등록 | **안 함** (Search Console·네이버 서치어드바이저는 소유자 인증 필요) |
+| 검색 등록 | Google Search Console: URL 접두어 속성, HTML 태그를 index.html에 반영(2026-10-14). 네이버 서치어드바이저: 호스트 단위만 허용 → 대표 사이트 저장소 rolex0331-cloud.github.io 생성, 루트 index.html에 확인 태그, 소유확인·사이트맵 제출 완료(2026-10-14, 사용자 보고) |
 | 실제 매출 | 없음 |
 
 ## 파일 지도
@@ -33,7 +34,6 @@
 ## 남은 차단 요인 (사용자만 가능)
 1. 트립닷컴 제휴 승인 대기 중 → 승인 후 대시보드에서 제휴 링크 1개 생성해 전달 → 파라미터를 config에 입력 (docs/operations.md)
 2. (선택) GoatCounter 계정 → 코드 입력
-3. Google Search Console / 네이버 서치어드바이저 등록 → 인증 파일·메타 값 전달 시 반영
 
 ## 다음 할 일
 - 2027-06 말 2028 월력요항 발표 → weekly-ops가 이슈로 알림 → holidays.js에 2028 추가, `npm run build`
