@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>연차각 소개 · 계산 방법 · 개인정보 안내</title>
+<meta name="description" content="연차각의 연차 최적화 계산 방법, 공휴일 데이터 출처, 개인정보 처리와 제휴 고지 안내.">
+<link rel="canonical" href="https://rolex0331-cloud.github.io/yeonchagak/about/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="연차각 소개 · 계산 방법 · 개인정보 안내">
+<meta property="og:description" content="연차각의 연차 최적화 계산 방법, 공휴일 데이터 출처, 개인정보 처리와 제휴 고지 안내.">
+<meta property="og:url" content="https://rolex0331-cloud.github.io/yeonchagak/about/">
+<meta property="og:image" content="https://rolex0331-cloud.github.io/yeonchagak/assets/og.png">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="site-header"><div class="wrap header-in">
+  <a class="logo" href="../"><span class="logo-mark">각</span>연차각</a>
+  <nav class="nav"><a href="../2027-holidays/">2027 공휴일·꿀조합</a><a href="../guide/">연차 규칙</a><a href="../about/">소개</a></nav>
+</div></header>
+<main class="wrap doc">
+
+<h1>연차각 소개</h1>
+<p class="lead">연차각은 남은 연차를 공휴일·주말 사이 어디에 넣어야 가장 길게 쉴 수 있는지 계산하는 무료 웹 도구입니다.</p>
+
+<h2>계산 방법</h2>
+<ul>
+<li>선택한 기간의 날짜를 근무일·주말·공휴일·회사 휴무일로 나눕니다.</li>
+<li>연차로 근무일을 메웠을 때 앞뒤가 근무일로 막히는 '최대 연속 휴일' 후보를 모두 찾습니다 (최대 21일 길이).</li>
+<li><b>추천 플랜</b>: 보유 연차 안에서 서로 겹치지 않는 연휴들을 골라 쉬는 날 합계가 가장 많아지도록 동적 계획법으로 계산합니다. 합계가 같으면 연차를 덜 쓰는 조합을 고릅니다.</li>
+<li><b>연차 효율 TOP</b>: 연휴 길이 ÷ 사용 연차가 큰 순서입니다.</li>
+<li>반차·시차 출퇴근, 교대 근무 일정은 아직 반영하지 않습니다.</li>
+</ul>
+
+<h2>공휴일 데이터</h2>
+<p>우주항공청이 매년 발표하는 월력요항(언론 보도)과 공개 공휴일 캘린더를 교차 확인해 수록합니다. 현재 확인일: 2026-10-14, 수록 연도: 2026, 2027년. 매주 자동 점검으로 공개 캘린더와 차이가 생기면 운영자에게 알림이 가고, 확인 후 반영합니다.</p>
+
+<h2 id="privacy">개인정보 안내</h2>
+<ul>
+<li>회원가입이 없고, 입력한 연차 일수·날짜는 서버로 전송되지 않습니다. 계산은 모두 사용 중인 브라우저 안에서 이뤄집니다.</li>
+<li>다음 방문 때 편하도록 마지막 설정을 이 브라우저의 로컬 저장소(localStorage)에만 저장합니다. 브라우저의 사이트 데이터 삭제로 지울 수 있습니다.</li>
+<li>'결과 공유'를 누르면 설정값(연도, 연차 일수, 선택한 날짜)이 링크 주소에 담깁니다. 이름·연락처 같은 개인 정보는 담기지 않습니다.</li>
+<li>방문 통계 도구를 쓰게 되면, 쿠키 없이 페이지 조회와 버튼 사용 횟수만 집계하는 방식으로 이 안내를 먼저 갱신합니다. 현재는 통계 도구를 사용하지 않습니다.</li>
+<li>사이트는 GitHub Pages에서 호스팅되며, GitHub는 보안 목적으로 접속 IP를 기록할 수 있습니다 (<a href="https://docs.github.com/ko/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub 개인정보처리방침</a>).</li>
+</ul>
+
+<h2>여행 링크와 제휴 고지</h2>
+<p>연휴 카드의 항공권·숙소 버튼은 해당 날짜가 입력된 트립닷컴 검색 결과로 연결됩니다. 제휴 프로그램에 승인되면 이 링크는 제휴 링크가 되며, 그때부터 모든 페이지 하단에 제휴 사실을 표시합니다. 이용자가 내는 가격은 같습니다. 현재는 제휴 링크가 아닌 일반 검색 링크입니다.</p>
+
+<h2>문의·오류 제보</h2>
+<p>공휴일 오류나 기능 제안은 <a href="https://github.com/rolex0331-cloud/yeonchagak/issues" rel="noopener">GitHub 이슈</a>로 남겨 주세요.</p>
+
+<h2>면책</h2>
+<p>계산 결과는 참고용입니다. 실제 연차 사용 가능 여부와 휴일은 회사 취업규칙·근로계약과 정부 발표를 따릅니다.</p>
+<p class="cta"><a class="btn primary" href="../">연차 계산하기 →</a></p>
+
+</main>
+<footer class="site-footer"><div class="wrap">
+  <p>공휴일 데이터 2026-10-14 확인 기준. 임시공휴일이 새로 지정되면 반영 전까지 빠질 수 있습니다.</p>
+  <p><a href="../">연차 계산기</a> · <a href="../about/#privacy">개인정보 안내</a> · <a href="../about/">소개·문의</a></p>
+</div></footer>
+</body>
+</html>

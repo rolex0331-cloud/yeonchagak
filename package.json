@@ -1,0 +1,22 @@
+{
+  "name": "yeonchagak",
+  "version": "1.0.0",
+  "private": true,
+  "description": "연차각 - 남은 연차로 가장 길게 쉬는 날짜를 계산하는 정적 웹 도구",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/build-content.mjs",
+    "test": "node --test tests/engine.test.mjs tests/site.test.mjs",
+    "test:e2e": "node --test tests/e2e.test.mjs",
+    "check:holidays": "node scripts/check-holidays.mjs",
+    "serve": "node scripts/serve.mjs",
+    "build:site": "node scripts/build-site.mjs"
+  },
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "puppeteer-core": "25.11.0"
+  }
+}

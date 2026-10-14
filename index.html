@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>연차각 — 남은 연차로 가장 길게 쉬는 날짜 계산 (2027 연차 꿀조합)</title>
+<meta name="description" content="남은 연차 일수를 넣으면 2027년 공휴일·대체공휴일·주말에 연차를 붙여 가장 길게 쉬는 날짜를 계산합니다. 5인 미만·노동절·회사 휴무일 반영, 캘린더(.ics) 저장, 공유 링크 지원.">
+<link rel="canonical" href="https://rolex0331-cloud.github.io/yeonchagak/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="연차각 — 내 연차로 가장 길게 쉬는 날짜">
+<meta property="og:description" content="남은 연차를 넣으면 공휴일에 붙여 최장 연휴를 찾아 드립니다. 2027년 추석, 연차 2일로 9일 연휴.">
+<meta property="og:url" content="https://rolex0331-cloud.github.io/yeonchagak/">
+<meta property="og:image" content="https://rolex0331-cloud.github.io/yeonchagak/assets/og.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebApplication","name":"연차각","url":"https://rolex0331-cloud.github.io/yeonchagak/","applicationCategory":"UtilitiesApplication","operatingSystem":"Web","inLanguage":"ko","offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"},"description":"남은 연차로 공휴일·주말을 이어 가장 긴 연휴를 계산하는 무료 도구"}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">본문 바로가기</a>
+<header class="site-header">
+  <div class="wrap header-in">
+    <a class="logo" href="./"><span class="logo-mark">각</span>연차각</a>
+    <nav class="nav">
+      <a href="2027-holidays/">2027 공휴일·꿀조합</a>
+      <a href="guide/">연차 규칙</a>
+      <a href="about/">소개</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  <section class="hero">
+    <h1>남은 연차, 어디에 붙이면 <em>가장 오래</em> 쉴까?</h1>
+    <p class="lead">연차 일수만 넣으면 공휴일·대체공휴일·주말 사이에 연차를 배치해 <strong>같은 연차로 가장 길게 쉬는 날짜</strong>를 계산합니다. 회원가입 없이, 입력값은 이 기기에서만 계산됩니다.</p>
+  </section>
+
+  <form id="planner" class="card form" novalidate>
+    <div class="row-main">
+      <label class="field">
+        <span class="label">연도</span>
+        <select id="year" name="year"></select>
+      </label>
+      <div class="field">
+        <span class="label" id="budget-label">쓸 수 있는 연차</span>
+        <div class="stepper" role="group" aria-labelledby="budget-label">
+          <button type="button" class="step" data-step="-1" aria-label="연차 1일 줄이기">−</button>
+          <input id="budget" name="budget" type="number" inputmode="numeric" min="0" max="40" step="1" value="15" aria-describedby="budget-help">
+          <button type="button" class="step" data-step="1" aria-label="연차 1일 늘리기">+</button>
+          <span class="unit">일</span>
+        </div>
+      </div>
+      <label class="field">
+        <span class="label">한 번에 쓸 최대 연차</span>
+        <select id="maxLeavePerBreak" name="maxLeavePerBreak">
+          <option value="1">1일</option><option value="2">2일</option><option value="3">3일</option>
+          <option value="4">4일</option><option value="5" selected>5일</option><option value="7">7일</option><option value="10">10일</option>
+        </select>
+      </label>
+      <label class="field">
+        <span class="label">연휴로 칠 최소 길이</span>
+        <select id="minBreak" name="minBreak">
+          <option value="3">3일 이상</option><option value="4" selected>4일 이상</option><option value="5">5일 이상</option><option value="7">7일 이상</option><option value="9">9일 이상</option>
+        </select>
+      </label>
+    </div>
+    <fieldset class="toggles goal">
+      <legend class="label">어떻게 쉬고 싶나요?</legend>
+      <label class="chk"><input type="radio" name="goal" value="long" checked> 긴 연휴 위주로</label>
+      <label class="chk"><input type="radio" name="goal" value="total"> 짧아도 여러 번, 쉬는 날 합계 최대</label>
+    </fieldset>
+    <p id="budget-help" class="help">연차가 몇 개 남았는지 모르면 회사 인사시스템이나 급여명세서를 확인하세요. 1년 이상 근무한 경우 법정 연차는 보통 15일입니다.</p>
+
+    <fieldset class="toggles">
+      <legend class="label">우리 회사는</legend>
+      <label class="chk"><input type="checkbox" id="holidaysOff" checked> 빨간 날(공휴일)에 쉰다</label>
+      <label class="chk"><input type="checkbox" id="substituteOff" checked> 대체공휴일에도 쉰다</label>
+      <label class="chk"><input type="checkbox" id="laborOff" checked> 노동절(5/1)에 쉰다</label>
+    </fieldset>
+
+    <details class="advanced" id="advanced">
+      <summary>고급 설정 — 이미 정한 연차, 회사 휴무일, 연차 못 쓰는 기간</summary>
+      <div class="adv-grid">
+        <div class="field">
+          <span class="label">계획 기간</span>
+          <div class="inline">
+            <input type="date" id="start" aria-label="계획 시작일"> ~ <input type="date" id="end" aria-label="계획 종료일">
+          </div>
+          <span class="help">비워 두면 선택한 연도 전체(올해는 오늘부터)</span>
+        </div>
+        <div class="field">
+          <span class="label">이미 쓰기로 정한 연차일</span>
+          <div class="inline"><input type="date" id="fixed-input" aria-label="확정 연차일"><button type="button" class="btn small" data-add="fixedLeave">추가</button></div>
+          <ul class="tags" id="fixedLeave-list"></ul>
+        </div>
+        <div class="field">
+          <span class="label">회사 휴무일 (창립기념일 등)</span>
+          <div class="inline"><input type="date" id="extra-input" aria-label="회사 휴무일"><button type="button" class="btn small" data-add="extraOff">추가</button></div>
+          <ul class="tags" id="extraOff-list"></ul>
+        </div>
+        <div class="field">
+          <span class="label">연차를 쓸 수 없는 기간 (결산·성수기 등)</span>
+          <div class="inline"><input type="date" id="bo-start" aria-label="불가 기간 시작"> ~ <input type="date" id="bo-end" aria-label="불가 기간 끝"><button type="button" class="btn small" data-add="blackout">추가</button></div>
+          <ul class="tags" id="blackout-list"></ul>
+        </div>
+      </div>
+    </details>
+    <div class="form-foot">
+      <button type="submit" class="btn primary" id="run">최장 연휴 계산하기</button>
+      <span class="help" id="data-note"></span>
+    </div>
+    <div id="errors" class="errors" role="alert" hidden></div>
+  </form>
+
+  <section id="results" class="results" hidden aria-live="polite">
+    <div class="summary card" id="summary"></div>
+
+    <div class="actions">
+      <button type="button" class="btn" id="dl-ics">📅 캘린더에 넣기 (.ics)</button>
+      <button type="button" class="btn" id="copy-request">📝 연차 신청 문구 복사</button>
+      <button type="button" class="btn" id="share">🔗 결과 공유</button>
+      <button type="button" class="btn ghost" id="print">🖨 인쇄</button>
+    </div>
+    <p class="toast" id="toast" role="status" hidden></p>
+
+    <h2 class="sec-title">추천 연차 플랜</h2>
+    <p class="help">보유 연차를 겹치지 않게 나눠, 고른 방식(긴 연휴 위주 / 합계 최대)에 가장 잘 맞는 조합입니다. 각 연휴에서 바로 항공권·숙소 날짜를 확인할 수 있습니다.</p>
+    <ol class="plan" id="plan"></ol>
+
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" aria-selected="true" data-tab="top" id="tab-top">연차 효율 TOP</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="longest" id="tab-longest">연차 N일로 최장 연휴</button>
+      <button type="button" role="tab" aria-selected="false" data-tab="natural" id="tab-natural">연차 없이 쉬는 연휴</button>
+    </div>
+    <div class="tabpanel card" id="panel" role="tabpanel"></div>
+
+    <h2 class="sec-title">달력으로 보기</h2>
+    <div class="legend">
+      <span><i class="sw holiday"></i>공휴일</span><span><i class="sw weekend"></i>주말</span><span><i class="sw leave"></i>추천 연차</span><span><i class="sw fixed"></i>확정 연차</span><span><i class="sw extra"></i>회사 휴무</span><span><i class="sw blocked"></i>연차 불가</span>
+    </div>
+    <div class="months" id="months"></div>
+  </section>
+
+  <section class="card info">
+    <h2>이런 분께 맞습니다</h2>
+    <ul>
+      <li><strong>연말에 내년 연차 계획을 짜는 직장인</strong> — 기사에 나온 '꿀조합'이 아니라 내 남은 연차와 회사 사정에 맞춘 날짜가 필요할 때</li>
+      <li><strong>5인 미만 사업장·교대 근무자</strong> — 공휴일에 쉬지 않는다면 '빨간 날' 체크를 끄면 그 기준으로 다시 계산됩니다</li>
+      <li><strong>여행을 일찍 예약하려는 분</strong> — 연휴 날짜가 정해지면 그 날짜 그대로 항공권·숙소를 비교할 수 있습니다</li>
+    </ul>
+    <p class="help">계산 방법과 데이터 출처는 <a href="about/">소개</a>에서, 대체공휴일·노동절·5인 미만 규칙은 <a href="guide/">연차 규칙</a>에서 확인하세요. 회사 취업규칙이 다를 수 있으니 최종 신청 전 회사 기준을 확인하세요.</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p id="aff-note" class="aff-note" hidden></p>
+    <p>공휴일 데이터: 우주항공청 월력요항 발표 및 공개 공휴일 캘린더 교차 확인 · <span id="verified"></span> 기준. 임시공휴일이 새로 지정되면 반영 전까지 결과에 포함되지 않을 수 있습니다.</p>
+    <p><a href="about/#privacy">개인정보 안내</a> · <a href="about/">소개·문의</a> · <a href="2027-holidays/">2027 공휴일</a></p>
+  </div>
+</footer>
+<script type="module" src="assets/app.js"></script>
+<noscript><p class="wrap">이 계산기는 자바스크립트가 필요합니다. <a href="2027-holidays/">2027 공휴일·연차 꿀조합 정리</a>는 자바스크립트 없이 볼 수 있습니다.</p></noscript>
+</body>
+</html>

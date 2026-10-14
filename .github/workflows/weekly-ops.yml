@@ -1,0 +1,57 @@
+name: weekly-ops
+on:
+  schedule:
+    - cron: '0 0 * * 1' # 매주 월요일 09:00 KST
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  holidays:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: 공휴일 데이터 점검
+        id: check
+        run: |
+          set +e
+          REPORT_FILE=report.txt node scripts/check-holidays.mjs
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+      - name: 차이가 있으면 이슈 생성/갱신
+        if: steps.check.outputs.code == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="공휴일 데이터 차이 감지"
+          body=$(printf '공개 공휴일 캘린더와 assets/holidays.js 사이에 차이가 있습니다.\n\n```\n%s\n```\n\n월력요항·정부 발표를 확인한 뒤 데이터를 고치고 push하면 테스트 통과 시 자동 배포됩니다. 운영 사이트는 자동으로 바뀌지 않았습니다.\n\n(자동 점검 %s)' "$(cat report.txt)" "$(date -u +%F)")
+          num=$(gh issue list --state open --search "in:title $title" --json number --jq '.[0].number')
+          if [ -n "$num" ]; then gh issue comment "$num" --body "$body"; else gh issue create --title "$title" --body "$body"; fi
+      - name: 네트워크 실패는 경고만
+        if: steps.check.outputs.code == '2'
+        run: echo "::warning::공개 캘린더를 가져오지 못해 이번 주 점검을 건너뜁니다."
+  live-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: 운영 사이트 E2E
+        id: e2e
+        continue-on-error: true
+        run: npm run test:e2e
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+          BASE_URL: https://rolex0331-cloud.github.io/yeonchagak/
+      - name: 실패 시 이슈 생성
+        if: steps.e2e.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "운영 사이트 점검 실패 $(date -u +%F)" --body "주간 E2E 점검이 실패했습니다. Actions 로그: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
