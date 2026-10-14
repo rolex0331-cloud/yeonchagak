@@ -206,7 +206,9 @@ test('여행 링크: 날짜 포함, 제휴 미설정 시 제휴 파라미터 없
   assert.equal([...f.searchParams.keys()].join(','), 'dcity,acity,ddate,rdate,triptype,class,quantity,locale,curr');
   const h = new URL(hotelUrl(tyo, '2027-09-11', '2027-09-19'));
   assert.equal(h.searchParams.get('cityId'), '228');
-  assert.equal(hotelUrl(DESTINATIONS.find((d) => d.id === 'fuk'), '2027-09-11', '2027-09-19'), null);
+  assert.equal(new URL(hotelUrl(DESTINATIONS.find((d) => d.id === 'fuk'), '2027-09-11', '2027-09-19')).searchParams.get('cityId'), '248');
+  assert.ok(DESTINATIONS.every((d) => d.hotelCityId), '모든 목적지 숙소 ID 확인됨');
+  assert.equal(new URL(flightUrl(tyo, '2027-09-11', '2027-09-14', 'pus')).searchParams.get('dcity'), 'pus');
 });
 
 test('공휴일 점검 스크립트: 차이 감지와 알려진 차이 제외', async () => {

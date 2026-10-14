@@ -13,6 +13,7 @@ export function defaultState(today, years) {
   return {
     year: y,
     mode: 'leave',
+    origin: 'sel',
     start: null,
     end: null,
     budget: 15,
@@ -32,6 +33,7 @@ export function encodeState(s) {
   const p = new URLSearchParams();
   p.set('y', String(s.year));
   if (s.mode === 'free') p.set('mode', 'free');
+  if (s.origin === 'pus') p.set('o', 'pus');
   p.set('b', String(s.budget));
   p.set('m', String(s.maxLeavePerBreak));
   p.set('l', String(s.minBreak));
@@ -53,6 +55,7 @@ export function decodeState(query, base) {
   const s = { ...base };
   s.year = int(p.get('y'), base.year);
   s.mode = p.get('mode') === 'free' ? 'free' : 'leave';
+  s.origin = p.get('o') === 'pus' ? 'pus' : 'sel';
   s.budget = int(p.get('b'), base.budget);
   s.maxLeavePerBreak = int(p.get('m'), base.maxLeavePerBreak);
   s.minBreak = int(p.get('l'), base.minBreak);

@@ -1,7 +1,7 @@
 import { plan, formatRange, toICS, leaveRequestText, weekdayKo, toDayNum, fromDayNum } from './engine.js';
 import { HOLIDAYS, YEARS, DATA_VERIFIED_AT } from './holidays.js';
 import { defaultState, encodeState, decodeState } from './state.js';
-import { DESTINATIONS, AFFILIATE, affiliateEnabled, ANALYTICS } from './config.js';
+import { DESTINATIONS, ORIGINS, AFFILIATE, affiliateEnabled, ANALYTICS } from './config.js';
 import { flightUrl, hotelUrl } from './links.js';
 import { PLACES, climate, recommend, tzText } from './places.js';
 
@@ -83,6 +83,7 @@ function fillForm() {
   if (!$('minBreak').value) $('minBreak').value = '4';
   document.querySelectorAll('input[name=goal]').forEach((r) => (r.checked = r.value === (state.goal || 'long')));
   document.querySelectorAll('input[name=mode]').forEach((r) => (r.checked = r.value === (state.mode || 'leave')));
+  document.querySelectorAll('input[name=origin]').forEach((r) => (r.checked = r.value === (state.origin || 'sel')));
   applyMode();
   $('holidaysOff').checked = state.holidaysOff;
   $('substituteOff').checked = state.substituteOff;
@@ -219,17 +220,18 @@ function renderBoard() {
     ? list
         .map((w, i) => {
           const st = w.length === longest ? '<span class="st">최장 연휴</span>' : '<span class="st go">탑승 가능</span>';
+          const leaveTxt = w.leaveDays.length ? `신청 ${w.leaveDays.map(mdSlash).join('·')}` : w.secured ? '확정 연차로 완성' : '연차 없이';
           return `<li${changed ? ` class="flip" style="animation-delay:${i * 60}ms"` : ''}>
-            <span class="fl">${flightCode(w)}</span>
-            <span class="from">${md(w.start)}<span class="sub">${weekdayKo(w.start)}</span><span class="to-inline"> → ${md(w.end)}<span class="sub">${weekdayKo(w.end)}</span></span></span>
-            <span class="to">${md(w.end)}<span class="sub">${weekdayKo(w.end)}</span></span>
-            <span class="days r">${w.length}일</span>
-            <span class="leave r">${w.cost ? `연차 ${w.cost}` : '연차 0'}</span>
+            <span class="route-b">${md(w.start)}<span class="sub">${weekdayKo(w.start)}</span> → ${md(w.end)}<span class="sub">${weekdayKo(w.end)}</span></span>
+            <span class="days">${w.length}일 쉼</span>
+            <span class="leave">${w.cost ? `연차 ${w.cost}일` : '연차 0일'}</span>
+            <span class="apply">${leaveTxt}</span>
             ${st}
+            <span class="fl">${flightCode(w)}</span>
           </li>`;
         })
         .join('')
-    : '<li><span class="fl">—</span><span class="from">조건에 맞는 연휴가 없어요</span></li>';
+    : '<li><span class="route-b">조건에 맞는 연휴가 없어요</span></li>';
   $('board-foot').textContent = isFree() ? `${state.year}년 · 연차 없이 쉬는 연휴 · 아래에서 조건을 바꾸면 안내판도 바뀝니다` : `${state.year}년 · 연차 ${r.budgetAfterFixed}일 기준 · 아래에서 조건을 바꾸면 안내판도 바뀝니다`;
 }
 
@@ -238,9 +240,13 @@ const dayDiff = (iso) => Math.round((toDayNum(iso) - toDayNum(TODAY)));
 const isPeak = (w) => w.holidays.some((h) => /설날|추석/.test(h));
 
 function planCard(w, i) {
+  const fixed = (w.fixedLeaveDays || []).map((d) => `<span class="chip fixed">${mdSlash(d)}(${weekdayKo(d)}) 확정</span>`).join('');
   const leave = w.leaveDays.length
-    ? w.leaveDays.map((d) => `<span class="chip">${mdSlash(d)}(${weekdayKo(d)})</span>`).join('')
-    : '<span class="chip free">연차 필요 없음</span>';
+    ? w.leaveDays.map((d) => `<span class="chip">${mdSlash(d)}(${weekdayKo(d)})</span>`).join('') + fixed
+    : fixed || '<span class="chip free">연차 필요 없음</span>';
+  const dates = [];
+  for (let n = toDayNum(w.start); n <= toDayNum(w.end); n++) dates.push(fromDayNum(n));
+  const opt = (d, sel) => `<option value="${d}"${d === sel ? ' selected' : ''}>${mdSlash(d)}(${weekdayKo(d)})</option>`;
   const month = Number(w.start.slice(5, 7));
   const recs = recommend(DESTINATIONS.map((d) => d.id), w.length, month);
   const pick = recs[0]?.id || DESTINATIONS[0].id;
@@ -266,7 +272,8 @@ function planCard(w, i) {
         <div><dt>${w.cost ? '효율' : '출발까지'}</dt><dd>${w.cost ? `×${effText(w)}` : dd > 0 ? `D-${dd}` : '진행 중'}</dd></div>
         <div><dt>경유</dt><dd class="small">${via}</dd></div>
       </dl>
-      <div class="leave-row"><span class="label">연차 쓸 날</span>${leave}</div>
+      <div class="leave-row"><span class="label">${w.leaveDays.length ? '신청할 연차' : '연차'}</span>${leave}</div>
+      ${w.secured ? '<p class="peak">이미 정한 연차로 완성된 연휴예요. 추가로 신청할 연차는 없어요.</p>' : ''}
       ${isPeak(w) ? '<p class="peak">명절 연휴는 출발 수요가 몰리는 기간이에요. 날짜가 정해졌다면 항공권을 일찍 확인해 보세요.</p>' : ''}
     </div>
     <div class="pass-stub">
@@ -274,6 +281,11 @@ function planCard(w, i) {
       <div class="dchips">${chips}</div>
       <label class="sr" for="dest-${i}">여행지 선택</label>
       <select id="dest-${i}" data-dest="${i}">${options}</select>
+      <div class="tripdates">
+        <label><span class="label">여행 출발</span><select data-dep="${i}">${dates.slice(0, -1).map((d) => opt(d, w.start)).join('')}</select></label>
+        <label><span class="label">귀국 출발</span><select data-ret="${i}">${dates.slice(1).map((d) => opt(d, w.end)).join('')}</select></label>
+      </div>
+      <p class="nights" data-nights="${i}"></p>
       <ul class="facts" data-facts="${i}"></ul>
       <div class="stub-btns">
         <a class="btn primary" target="_blank" rel="${relOpts()}" data-out="flight" data-i="${i}" href="#"><svg><use href="#i-plane"/></svg>항공권</a>
@@ -292,8 +304,21 @@ function updateTravel(i) {
   document.querySelectorAll(`[data-pick][data-i="${i}"]`).forEach((b) => b.classList.toggle('on', b.dataset.pick === dest.id));
   const f = document.querySelector(`[data-out="flight"][data-i="${i}"]`);
   const h = document.querySelector(`[data-out="hotel"][data-i="${i}"]`);
-  f.href = flightUrl(dest, w.start, w.end);
-  const hu = hotelUrl(dest, w.start, w.end);
+  const depSel = document.querySelector(`[data-dep="${i}"]`);
+  const retSel = document.querySelector(`[data-ret="${i}"]`);
+  let dep = depSel?.value || w.start;
+  let ret = retSel?.value || w.end;
+  if (retSel && ret <= dep) {
+    // 귀국일이 출발일보다 빠르면 출발 다음 날로 맞춘다
+    ret = fromDayNum(toDayNum(dep) + 1);
+    retSel.value = ret;
+  }
+  const nightsN = toDayNum(ret) - toDayNum(dep);
+  const nEl = document.querySelector(`[data-nights="${i}"]`);
+  if (nEl) nEl.textContent = `${nightsN}박 ${nightsN + 1}일 여행 · 연휴 ${w.length}일 중`;
+  const origin = ORIGINS.find((o) => o.id === state.origin) || ORIGINS[0];
+  f.href = flightUrl(dest, dep, ret, origin.id);
+  const hu = hotelUrl(dest, dep, ret);
   if (hu) {
     h.href = hu;
     h.hidden = false;
@@ -305,14 +330,14 @@ function updateTravel(i) {
   const pl = PLACES[dest.id];
   const facts = [];
   if (c) {
-    facts.push(`<li><span>${month}월 날씨</span><b>${c.hi}° / ${c.lo}°</b></li>`);
-    facts.push(`<li><span>비행</span><b>직항 ${pl.flight}</b></li>`);
+    facts.push(`<li><span>${month}월 평년 기온</span><b>${c.hi}° / ${c.lo}°</b></li>`);
+    facts.push(`<li><span>비행 (인천 기준)</span><b>직항 ${pl.flight}</b></li>`);
     facts.push(`<li><span>시차</span><b>${tzText(pl.tz)}</b></li>`);
     const warn = [c.rainy ? `비가 많은 달 (평년 ${c.rain}mm)` : '', c.typhoon ? '태풍 영향 가능 시기' : ''].filter(Boolean);
     if (warn.length) facts.push(`<li class="warn"><span>참고</span><b>${warn.join(' · ')}</b></li>`);
   }
   document.querySelector(`[data-facts="${i}"]`).innerHTML = facts.join('');
-  document.querySelector(`[data-note="${i}"]`).textContent = `${dest.name} 왕복 ${mdSlash(w.start)} 출발 · ${mdSlash(w.end)} 귀국 기준, 트립닷컴에서 열려요.${hu ? '' : ' 이 도시는 숙소 바로가기를 준비 중이에요.'}${c ? ` 날씨는 ${pl.src} 1991–2020 평년값.` : ''}`;
+  document.querySelector(`[data-note="${i}"]`).textContent = `${origin.name} 출발 ${dest.name} 왕복 · ${mdSlash(dep)} 출발, ${mdSlash(ret)} 귀국편 출발 기준으로 트립닷컴에서 열려요. 한국 도착일은 항공편에 따라 다를 수 있어요.${origin.id !== 'sel' ? ' 노선에 따라 경유편만 있을 수 있어요.' : ''}${hu ? '' : ' 이 도시는 숙소 바로가기를 준비 중이에요.'}${c ? ` 기온은 ${pl.src} 1991–2020 평년값이며 실제 예보가 아니에요.` : ''}`;
 }
 
 function listRow(w) {
@@ -528,14 +553,32 @@ document.querySelector('.tabs').addEventListener('click', (e) => {
 
 $('plan').addEventListener('change', (e) => {
   const sel = e.target.closest('[data-dest]');
-  if (sel) updateTravel(Number(sel.dataset.dest));
+  if (sel) {
+    updateTravel(Number(sel.dataset.dest));
+    track('dest_change');
+  }
+  const d = e.target.closest('[data-dep],[data-ret]');
+  if (d) {
+    updateTravel(Number(d.dataset.dep ?? d.dataset.ret));
+    track('trip_dates_change');
+  }
 });
+document.querySelectorAll('input[name=origin]').forEach((r) =>
+  r.addEventListener('change', () => {
+    state.origin = r.value;
+    store.set(state);
+    history.replaceState(null, '', `${location.pathname}?${encodeState(state)}`);
+    passes().forEach((_, i) => updateTravel(i));
+    track('origin_change');
+  })
+);
 $('plan').addEventListener('click', (e) => {
   const chip = e.target.closest('[data-pick]');
   if (chip) {
     const sel = document.querySelector(`[data-dest="${chip.dataset.i}"]`);
     sel.value = chip.dataset.pick;
     updateTravel(Number(chip.dataset.i));
+    track('dest_change');
     return;
   }
   const a = e.target.closest('[data-out]');

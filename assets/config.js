@@ -24,14 +24,20 @@ export const ANALYTICS = {
   goatcounterCode: '',
 };
 
-// 여행 검색 목적지. hotelCityId는 트립닷컴 숙소 목록 페이지에서 직접 확인한 값만 넣는다.
+// 출발 도시 (트립닷컴 도시 코드, 2026-10-14 링크 동작 확인)
+export const ORIGINS = [
+  { id: 'sel', name: '서울' },
+  { id: 'pus', name: '부산' },
+];
+
+// 여행 검색 목적지. hotelCityId는 트립닷컴 숙소 목록 페이지에서 도시 이름을 직접 확인한 값만 넣는다 (2026-10-14).
 export const DESTINATIONS = [
   { id: 'tyo', name: '도쿄', from: 'sel', to: 'tyo', hotelCityId: 228 },
   { id: 'osa', name: '오사카', from: 'sel', to: 'osa', hotelCityId: 219 },
-  { id: 'fuk', name: '후쿠오카', from: 'sel', to: 'fuk' },
-  { id: 'tpe', name: '타이베이', from: 'sel', to: 'tpe' },
+  { id: 'fuk', name: '후쿠오카', from: 'sel', to: 'fuk', hotelCityId: 248 },
+  { id: 'tpe', name: '타이베이', from: 'sel', to: 'tpe', hotelCityId: 617 },
   { id: 'hkg', name: '홍콩', from: 'sel', to: 'hkg', hotelCityId: 58 },
   { id: 'dad', name: '다낭', from: 'sel', to: 'dad', hotelCityId: 1356 },
-  { id: 'bkk', name: '방콕', from: 'sel', to: 'bkk' },
-  { id: 'cju', name: '제주', from: 'sel', to: 'cju' },
+  { id: 'bkk', name: '방콕', from: 'sel', to: 'bkk', hotelCityId: 359 },
+  { id: 'cju', name: '제주', from: 'sel', to: 'cju', hotelCityId: 737 },
 ];

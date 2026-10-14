@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "node scripts/build-content.mjs",
-    "test": "node --test tests/engine.test.mjs tests/site.test.mjs",
+    "test": "node --test tests/engine.test.mjs tests/engine-regression.test.mjs tests/site.test.mjs",
     "test:e2e": "node --test tests/e2e.test.mjs",
     "check:holidays": "node scripts/check-holidays.mjs",
     "serve": "node scripts/serve.mjs",

@@ -6,9 +6,9 @@ function withAffiliate(params) {
   return params;
 }
 
-export function flightUrl(dest, depart, ret) {
+export function flightUrl(dest, depart, ret, origin = dest.from) {
   const p = new URLSearchParams({
-    dcity: dest.from,
+    dcity: origin,
     acity: dest.to,
     ddate: depart,
     rdate: ret,

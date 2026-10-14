@@ -82,12 +82,29 @@ test('연차 2일 → 2027 추석 9일 연휴와 날짜가 들어간 항공권 �
   const u = new URL(href);
   assert.equal(u.searchParams.get('ddate'), '2027-09-11');
   assert.equal(u.searchParams.get('rdate'), '2027-09-19');
-  // 목적지 변경 시 링크 갱신, 숙소 미지원 목적지는 숙소 버튼 숨김
-  await page.select('#plan > li:first-child select', 'fuk');
+  // 목적지 변경 시 링크 갱신, 확인된 도시 ID로 숙소 링크
+  await page.select('#plan > li:first-child [data-dest]', 'fuk');
   assert.equal(new URL(await page.$eval('#plan > li:first-child [data-out=flight]', (a) => a.href)).searchParams.get('acity'), 'fuk');
-  assert.equal(await page.$eval('#plan > li:first-child [data-out=hotel]', (a) => a.hidden), true);
-  await page.select('#plan > li:first-child select', 'tyo');
   assert.equal(await page.$eval('#plan > li:first-child [data-out=hotel]', (a) => a.hidden), false);
+  assert.equal(new URL(await page.$eval('#plan > li:first-child [data-out=hotel]', (a) => a.href)).searchParams.get('cityId'), '248');
+  // 연휴 안에서 여행 기간 조정: 9/12 출발, 9/15 귀국 → 3박 4일, 링크 날짜 반영
+  await page.select('#plan > li:first-child [data-dep]', '2027-09-12');
+  await page.select('#plan > li:first-child [data-ret]', '2027-09-15');
+  const fu = new URL(await page.$eval('#plan > li:first-child [data-out=flight]', (a) => a.href));
+  assert.equal(fu.searchParams.get('ddate'), '2027-09-12');
+  assert.equal(fu.searchParams.get('rdate'), '2027-09-15');
+  assert.equal(new URL(await page.$eval('#plan > li:first-child [data-out=hotel]', (a) => a.href)).searchParams.get('checkout'), '2027-09-15');
+  assert.match(await text(page, '#plan > li:first-child [data-nights]'), /3박 4일/);
+  // 귀국일을 출발일 이전으로 고르면 출발 다음 날로 보정
+  await page.select('#plan > li:first-child [data-dep]', '2027-09-16');
+  await page.select('#plan > li:first-child [data-ret]', '2027-09-13');
+  assert.equal(await page.$eval('#plan > li:first-child [data-ret]', (s) => s.value), '2027-09-17');
+  // 출발 도시 부산
+  await page.click('input[name=origin][value=pus]');
+  assert.equal(new URL(await page.$eval('#plan > li:first-child [data-out=flight]', (a) => a.href)).searchParams.get('dcity'), 'pus');
+  assert.match(page.url(), /o=pus/);
+  await page.click('input[name=origin][value=sel]');
+  await page.select('#plan > li:first-child [data-dest]', 'tyo');
   // 주소창에 상태 반영 → 새로고침 후 유지
   assert.match(page.url(), /b=2/);
   await page.reload({ waitUntil: 'networkidle0' });
@@ -111,6 +128,7 @@ test('빈 입력·범위 초과 입력은 오류 표시, 결과 숨김', async (
 
 test('공휴일에 쉬지 않는 회사: 연차 없이 쉬는 연휴 없음', async () => {
   const { page } = await open('?y=2027&b=15');
+  await page.click('#advanced summary');
   await page.click('#holidaysOff');
   await new Promise((r) => setTimeout(r, 150));
   assert.equal(await page.$eval('#substituteOff', (el) => el.disabled), true);
@@ -230,6 +248,7 @@ test('제휴·측정 설정을 넣으면: 고지 표시, 링크에 파라미터,
   assert.equal(new URL(a.href).searchParams.get('Allianceid'), 'TESTAID');
   assert.match(a.rel, /sponsored/);
   await page.click('#dl-ics');
+  await page.click('#advanced summary');
   await page.click('#holidaysOff');
   await new Promise((r) => setTimeout(r, 300));
   const paths = counted.map((c) => JSON.parse(c).path);
@@ -257,18 +276,36 @@ test('연차가 없어요 모드: 빨간 날 연휴를 탑승권으로, 연차 �
 test('탑승권 여행 정보: 그 달 평년 기온·비행·시차, 추천 칩으로 목적지 변경', async () => {
   const { page } = await open('?y=2027&b=2');
   const facts = await text(page, '#plan > li:first-child [data-facts]');
-  assert.match(facts, /9월 날씨/);
+  assert.match(facts, /9월 평년 기온/);
   assert.match(facts, /직항 \d시간대/);
   assert.match(facts, /시차/);
   const chip = await page.$('#plan > li:first-child [data-pick]:not(.on)');
   if (chip) {
     const id = await chip.evaluate((b) => b.dataset.pick);
     await chip.click();
-    assert.equal(await page.$eval('#plan > li:first-child select', (s) => s.value), id);
+    assert.equal(await page.$eval('#plan > li:first-child [data-dest]', (s) => s.value), id);
     assert.equal(new URL(await page.$eval('#plan > li:first-child [data-out=flight]', (a) => a.href)).searchParams.get('acity'), id);
   }
   // 도쿄 9월 평년값(JMA): 최고 27.5 → 28°, 최저 20.3 → 20°
-  await page.select('#plan > li:first-child select', 'tyo');
+  await page.select('#plan > li:first-child [data-dest]', 'tyo');
   assert.match(await text(page, '#plan > li:first-child [data-facts]'), /28° \/ 20°/);
+  await page.close();
+});
+
+test('모바일 첫 화면 안내판에 신청할 연차 날짜가 보인다', async () => {
+  const { page } = await open('?y=2027&b=2', { width: 390, height: 844, mobile: true });
+  const t = await text(page, '#board');
+  assert.match(t, /9\.11.*9\.19/s);
+  assert.match(t, /신청 9\/13·9\/17/);
+  const top = await page.$eval('#board li', (el) => el.getBoundingClientRect().top);
+  assert.ok(top < 844, `안내판 첫 줄이 첫 화면 안 (${Math.round(top)}px)`);
+  await page.close();
+});
+
+test('고정 연차만으로 완성된 연휴도 탑승권·캘린더 대상에 남는다', async () => {
+  const { page } = await open('?y=2026&b=1&m=5&l=4&f=2026-12-24');
+  const ranges = await page.$$eval('#plan .pi-range', (els) => els.map((e) => e.textContent));
+  assert.ok(ranges.some((r) => /12\/24\(목\) ~ 12\/27\(일\)/.test(r)), ranges.join(' | '));
+  assert.match(await text(page, '#plan'), /이미 정한 연차로 완성/);
   await page.close();
 });

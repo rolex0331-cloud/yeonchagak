@@ -148,7 +148,8 @@ function describeWindow(days, s, e, leaveIdx) {
 }
 
 // 연차로 메워서 만들 수 있는 '최대 연속 휴일' 후보 전체.
-// 조건: 앞날과 다음날이 근무일(=연휴가 더 늘어날 수 없음), 내부 근무일은 모두 연차로 채움.
+// 조건: 앞날과 다음날이 근무일(=더 늘리려면 연차가 더 필요), 내부 근무일은 모두 연차로 채움.
+// 구간 [s,e]마다 연차 배치가 하나로 정해지므로, 겹치지 않는 구간 조합이 가능한 모든 연차 배치를 덮는다.
 export function enumerateWindows(days, options) {
   const n = days.length;
   const out = [];
@@ -163,8 +164,7 @@ export function enumerateWindows(days, options) {
         if (leaveIdx.length > options.maxLeavePerBreak) break;
       }
       if (e < n - 1 && isOff(days[e + 1])) continue; // 다음날도 쉬면 아직 끝이 아님
-      // 연휴의 양 끝이 연차일 필요는 없지만, 끝이 연차인 경우는 덜 효율적인 변형이라 제외
-      if (days[s].type === 'work' || days[e].type === 'work') continue;
+      // 시작·끝이 연차인 구간도 유효하다 (예: 공휴일 전날 연차, 주말 앞 금요일 연차)
       if (!leaveIdx.length) continue;
       out.push({ s, e, leaveIdx: leaveIdx.slice() });
     }
@@ -259,6 +259,24 @@ export function longestByCost(days, windows, budget) {
     .map((c) => describeWindow(days, best.get(c).s, best.get(c).e, best.get(c).leaveIdx));
 }
 
+// 확정 연차(이미 쓰기로 한 날)로 이미 만들어진 3일 이상 연휴
+export function securedBreaks(days) {
+  const out = [];
+  let i = 0;
+  while (i < days.length) {
+    if (!isOff(days[i])) {
+      i++;
+      continue;
+    }
+    let j = i;
+    while (j + 1 < days.length && isOff(days[j + 1])) j++;
+    const hasFixed = days.slice(i, j + 1).some((d) => d.fixedLeave);
+    if (j - i + 1 >= 3 && hasFixed) out.push({ ...describeWindow(days, i, j, []), secured: true });
+    i = j + 1;
+  }
+  return out;
+}
+
 // 연차 없이 쉬는 3일 이상 연휴
 export function naturalBreaks(days) {
   const out = [];
@@ -291,7 +309,11 @@ export function plan(input, holidayTable) {
     return { ok: false, errors: [`확정 연차(${fixedApplied}일)가 보유 연차(${options.budget}일)보다 많습니다.`] };
   }
   const windows = enumerateWindows(days, options);
-  const planned = optimizePlan(days, windows, budget, options.minBreak, options.goal);
+  const optimized = optimizePlan(days, windows, budget, options.minBreak, options.goal);
+  // 추천 연휴와 겹치지 않는 '확정 연차로 이미 완성된 연휴'도 결과에 남긴다
+  const overlaps = (a, b) => !(a.end < b.start || a.start > b.end);
+  const secured = securedBreaks(days).filter((sb) => !optimized.some((w) => overlaps(w, sb)));
+  const planned = [...optimized, ...secured].sort((a, b) => a.start.localeCompare(b.start));
   const used = planned.reduce((a, w) => a + w.cost, 0);
   const leaveSet = new Set(planned.flatMap((w) => w.leaveDays));
   const coverage = days.filter((d) => isOff(d) || leaveSet.has(d.date)).length;
@@ -303,6 +325,7 @@ export function plan(input, holidayTable) {
     fixedLeaveCount: fixedApplied,
     fixedOutOfRange: fixedCount !== fixedApplied ? true : false,
     plan: planned,
+    secured,
     planLeaveUsed: used,
     planDaysOff: planned.reduce((a, w) => a + w.length, 0),
     leftover: budget - used,
@@ -326,18 +349,22 @@ export function toICS(plans, { title = '징검', stamp = new Date() } = {}) {
   const esc = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
   const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//yeonchagak//KO', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', `X-WR-CALNAME:${esc(title)}`];
   plans.forEach((w, i) => {
-    const desc = `연차 ${w.cost}일 사용: ${w.leaveDays.join(', ')}${w.holidays.length ? `\n포함 공휴일: ${w.holidays.join(', ')}` : ''}`;
+    const desc = `${w.cost ? `추가 연차 ${w.cost}일: ${w.leaveDays.join(', ')}` : '추가 연차 없음'}${(w.fixedLeaveDays || []).length ? `
+확정 연차: ${w.fixedLeaveDays.join(', ')}` : ''}${w.holidays.length ? `\n포함 공휴일: ${w.holidays.join(', ')}` : ''}`;
     lines.push(
       'BEGIN:VEVENT',
       `UID:break-${pad(w.start)}-${pad(w.end)}-${i}@yeonchagak`,
       `DTSTAMP:${dtstamp}`,
       `DTSTART;VALUE=DATE:${pad(w.start)}`,
       `DTEND;VALUE=DATE:${pad(next(w.end))}`,
-      `SUMMARY:${esc(`🌴 연휴 ${w.length}일 (연차 ${w.cost}일)`)}`,
+      `SUMMARY:${esc(`연휴 ${w.length}일${w.cost ? ` (연차 ${w.cost}일)` : ''}`)}`,
       `DESCRIPTION:${esc(desc)}`,
       'TRANSP:TRANSPARENT',
       'END:VEVENT'
     );
+    (w.fixedLeaveDays || []).forEach((d) => {
+      lines.push('BEGIN:VEVENT', `UID:fixed-${pad(d)}@yeonchagak`, `DTSTAMP:${dtstamp}`, `DTSTART;VALUE=DATE:${pad(d)}`, `DTEND;VALUE=DATE:${pad(next(d))}`, 'SUMMARY:연차(확정)', 'END:VEVENT');
+    });
     w.leaveDays.forEach((d) => {
       lines.push(
         'BEGIN:VEVENT',

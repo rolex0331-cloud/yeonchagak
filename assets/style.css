@@ -110,7 +110,7 @@ svg { flex: 0 0 auto; }
 .lead { margin: 0; max-width: 34em; font-size: clamp(16px, 2vw, 18px); color: #b7c2d3; line-height: 1.65; }
 
 .board { margin-top: 40px; background: var(--night-2); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: var(--radius-lg); padding: 14px 14px 10px; }
-.board-head, .board-rows li { display: grid; grid-template-columns: 104px 150px 150px 84px 96px minmax(0, 1fr); gap: 8px; align-items: center; }
+.board-head, .board-rows li { display: grid; grid-template-columns: minmax(200px, 1.3fr) 90px 90px minmax(150px, 1fr) 104px 80px; gap: 8px; align-items: center; }
 .board-head { padding: 4px 10px 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: #7f8ca1; }
 .board-head .r, .board-rows .r { text-align: right; }
 .board-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
@@ -387,3 +387,41 @@ input[type=date] { width: auto; max-width: 100%; flex: 1 1 140px; }
 .facts li.warn b { color: var(--coral-ink); font-size: 13px; }
 .peak { margin: 14px 0 0; font-size: 13.5px; color: var(--ink-2); background: var(--sky-soft); border-radius: 10px; padding: 9px 12px; }
 .chip.free { background: var(--paper); color: var(--muted); }
+
+/* 안내판: 일정·신청일 우선 */
+.board-rows .route-b { font-size: 18px; letter-spacing: -0.01em; }
+.board-rows .days { color: #fff; }
+.board-rows .leave { color: #c9d3e2; font-weight: 600; }
+.board-rows .apply { color: var(--amber); font-weight: 700; }
+.board-rows .fl { font-size: 12px; color: #6f7d93; letter-spacing: 0.06em; font-weight: 600; justify-self: end; }
+.board-head span:nth-last-child(2) { justify-self: end; }
+.board-head span:last-child { justify-self: end; }
+@media (max-width: 720px) {
+  .board-rows li { grid-template-columns: 1fr auto; grid-template-areas: 'route days' 'apply leave' 'st fl'; row-gap: 4px; }
+  .board-rows .route-b { grid-area: route; font-size: 17px; }
+  .board-rows .days { grid-area: days; justify-self: end; }
+  .board-rows .leave { grid-area: leave; justify-self: end; font-size: 14px; }
+  .board-rows .apply { grid-area: apply; font-size: 15px; }
+  .board-rows .st { grid-area: st; justify-self: start; }
+  .board-rows .fl { grid-area: fl; }
+}
+.opts.basic { grid-template-columns: minmax(0, 260px); }
+.advanced .opts { margin-top: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cal { margin-top: 44px; }
+.cal > summary { list-style: none; cursor: pointer; margin: 0 0 14px; display: flex; align-items: baseline; gap: 12px; }
+.cal > summary::-webkit-details-marker { display: none; }
+.cal > summary h2::after { content: ' ▾'; color: var(--muted); font-size: 16px; }
+.cal[open] > summary h2::after { content: ' ▴'; }
+.cal .legend { margin-bottom: 12px; }
+.origin { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 14px; }
+.origin .label { margin-right: 4px; }
+.origin label { position: relative; }
+.origin input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.origin span:not(.label) { display: inline-flex; align-items: center; min-height: 38px; padding: 0 14px; border-radius: 999px; background: var(--card); box-shadow: var(--shadow); font-weight: 650; font-size: 14px; color: var(--ink-2); }
+.origin input:checked + span { background: var(--ink); color: var(--card); }
+.origin input:focus-visible + span { outline: 3px solid color-mix(in srgb, var(--sky) 55%, transparent); outline-offset: 2px; }
+.tripdates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tripdates label { display: flex; flex-direction: column; gap: 4px; }
+.tripdates select { min-height: 42px; padding: 8px 32px 8px 10px; font-size: 14px; background-position: right 10px center; }
+.nights { margin: 0; font-size: 13px; font-weight: 700; color: var(--sky); }
+.chip.fixed { background: color-mix(in srgb, var(--violet) 16%, transparent); color: var(--violet); }

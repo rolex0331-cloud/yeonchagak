@@ -52,7 +52,7 @@
     <p class="lead">연차가 있으면 연차를 붙여 가장 길게, 없으면 빨간 날 연휴만으로. 연휴마다 여행지 날씨와 비행시간까지 한 번에 보여 드려요. 가입 없이, 계산은 이 기기에서만.</p>
     <div class="board" aria-label="추천 연휴 출발 안내판">
       <div class="board-head">
-        <span>편명</span><span>출발</span><span>도착</span><span class="r">연휴</span><span class="r">연차</span><span>상태</span>
+        <span>일정</span><span>쉬는 날</span><span>연차</span><span>신청할 날</span><span>상태</span><span>편명</span>
       </div>
       <ol class="board-rows" id="board"></ol>
       <p class="board-foot" id="board-foot"></p>
@@ -76,41 +76,45 @@
       <p id="budget-help" class="hint">모르면 인사시스템을 확인하세요. 1년 이상 근무했다면 보통 15일입니다.</p>
     </div>
 
-    <div class="opts">
+    <div class="opts basic">
       <label class="field">
         <span class="label">연도</span>
         <select id="year" name="year"></select>
       </label>
-      <label class="field leave-only">
-        <span class="label">한 번에 쓸 최대 연차</span>
-        <select id="maxLeavePerBreak" name="maxLeavePerBreak">
-          <option value="1">1일</option><option value="2">2일</option><option value="3">3일</option>
-          <option value="4">4일</option><option value="5" selected>5일</option><option value="7">7일</option><option value="10">10일</option>
-        </select>
-      </label>
-      <label class="field leave-only">
-        <span class="label">연휴로 칠 최소 길이</span>
-        <select id="minBreak" name="minBreak">
-          <option value="3">3일 이상</option><option value="4" selected>4일 이상</option><option value="5">5일 이상</option><option value="7">7일 이상</option><option value="9">9일 이상</option>
-        </select>
-      </label>
     </div>
 
-    <fieldset class="seg leave-only">
-      <legend class="label">어떻게 쉴까요?</legend>
-      <label><input type="radio" name="goal" value="long" checked><span>길게 한 번씩</span></label>
-      <label><input type="radio" name="goal" value="total"><span>짧아도 자주</span></label>
-    </fieldset>
-
-    <fieldset class="toggles">
-      <legend class="label" id="toggles-legend">우리 회사는</legend>
-      <label class="sw"><input type="checkbox" id="holidaysOff" checked><span>빨간 날에 쉰다</span></label>
-      <label class="sw"><input type="checkbox" id="substituteOff" checked><span>대체공휴일에도 쉰다</span></label>
-      <label class="sw"><input type="checkbox" id="laborOff" checked><span>노동절(5/1)에 쉰다</span></label>
-    </fieldset>
-
     <details class="advanced" id="advanced">
-      <summary>세부 조건 <span>계획 기간 · 쉬는 날 추가 · 이미 정한 연차</span></summary>
+      <summary>조건 바꾸기 <span>1회 최대 연차 · 연휴 길이 · 휴일 기준 · 날짜 추가</span></summary>
+    <div class="opts">
+        <label class="field leave-only">
+          <span class="label">한 번에 쓸 최대 연차</span>
+          <select id="maxLeavePerBreak" name="maxLeavePerBreak">
+            <option value="1">1일</option><option value="2">2일</option><option value="3">3일</option>
+            <option value="4">4일</option><option value="5" selected>5일</option><option value="7">7일</option><option value="10">10일</option>
+          </select>
+        </label>
+        <label class="field leave-only">
+          <span class="label">연휴로 칠 최소 길이</span>
+          <select id="minBreak" name="minBreak">
+            <option value="3">3일 이상</option><option value="4" selected>4일 이상</option><option value="5">5일 이상</option><option value="7">7일 이상</option><option value="9">9일 이상</option>
+          </select>
+        </label>
+      </div>
+  
+      <fieldset class="seg leave-only">
+        <legend class="label">어떻게 쉴까요?</legend>
+        <label><input type="radio" name="goal" value="long" checked><span>길게 한 번씩</span></label>
+        <label><input type="radio" name="goal" value="total"><span>짧아도 자주</span></label>
+      </fieldset>
+  
+      <fieldset class="toggles">
+        <legend class="label" id="toggles-legend">우리 회사는</legend>
+        <label class="sw"><input type="checkbox" id="holidaysOff" checked><span>빨간 날에 쉰다</span></label>
+        <label class="sw"><input type="checkbox" id="substituteOff" checked><span>대체공휴일에도 쉰다</span></label>
+        <label class="sw"><input type="checkbox" id="laborOff" checked><span>노동절(5/1)에 쉰다</span></label>
+      </fieldset>
+  
+  
       <div class="adv-grid">
         <div class="field">
           <span class="label">계획 기간</span>
@@ -156,6 +160,11 @@
       <h2>탑승권</h2>
       <p class="hint" id="pass-hint">연휴마다 그 달 날씨와 비행시간을 보고, 날짜 그대로 항공권·숙소를 확인하세요.</p>
     </div>
+    <div class="origin" role="radiogroup" aria-label="출발 도시">
+      <span class="label">출발 도시</span>
+      <label><input type="radio" name="origin" value="sel" checked><span>서울 (인천·김포)</span></label>
+      <label><input type="radio" name="origin" value="pus"><span>부산 (김해)</span></label>
+    </div>
     <ol class="passes" id="plan"></ol>
 
     <div class="sec-head leave-only">
@@ -168,13 +177,13 @@
     </div>
     <div class="panel tabpanel leave-only" id="panel" role="tabpanel"></div>
 
-    <div class="sec-head">
-      <h2>달력</h2>
+    <details class="cal" id="cal">
+    <summary class="sec-head"><h2>달력으로 보기</h2><span class="hint">12개월 한눈에</span></summary>
       <div class="legend">
         <span><i class="sw-c holiday"></i>공휴일</span><span><i class="sw-c leave"></i>추천 연차</span><span><i class="sw-c fixed"></i>확정 연차</span><span><i class="sw-c extra"></i>회사 휴무</span><span><i class="sw-c blocked"></i>연차 불가</span>
       </div>
-    </div>
     <div class="months" id="months"></div>
+    </details>
   </section>
 </main>
 
