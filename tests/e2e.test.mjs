@@ -127,7 +127,7 @@ test('고급 설정: 9월 연차 불가 → 9월에 연차 배치 안 함, 태�
   await page.$eval('#bo-end', (el) => (el.value = '2027-09-30'));
   await page.click('[data-add=blackout]');
   await new Promise((r) => setTimeout(r, 150));
-  const chips = await page.$$eval('#plan .chip.leave', (els) => els.map((e) => e.textContent));
+  const chips = await page.$$eval('#plan .chip', (els) => els.map((e) => e.textContent));
   assert.ok(chips.length > 0);
   assert.ok(chips.every((c) => !c.startsWith('9/')), chips.join(','));
   assert.equal((await page.$$('#blackout-list li')).length, 1);
@@ -201,7 +201,7 @@ test('콘텐츠 페이지와 404', async () => {
   }
   const { page, res } = await open('no-such-page/');
   assert.equal(res.status(), 404);
-  assert.match(await text(page, 'h1'), /찾을 수 없습니다/);
+  assert.match(await text(page, 'h1'), /운항하지 않아요/);
   await page.close();
 });
 

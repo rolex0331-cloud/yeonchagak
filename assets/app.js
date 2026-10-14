@@ -113,7 +113,7 @@ function showErrors(list) {
     return;
   }
   box.hidden = false;
-  box.innerHTML = list.map((e) => `<p>⚠️ ${escapeHtml(e)}</p>`).join('');
+  box.innerHTML = list.map((e) => `<p>${escapeHtml(e)}</p>`).join('');
 }
 
 function escapeHtml(s) {
@@ -164,44 +164,86 @@ function run({ scroll = false, userAction = false } = {}) {
   if (scroll) $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+const WEEK_FULL = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+const md = (iso) => `${Number(iso.slice(5, 7))}.${String(Number(iso.slice(8))).padStart(2, '0')}`;
+const mdSlash = (iso) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8))}`;
+const flightCode = (w) => `JG ${w.start.slice(5, 7)}${w.start.slice(8)}`;
+const effText = (w) => (w.length / w.cost).toFixed(1).replace(/\.0$/, '');
+const relOpts = () => `noopener${affiliateEnabled() ? ' sponsored' : ''}`;
+
 function render() {
   const r = result;
   const { start, end } = rangeFor(state);
   const s = $('summary');
-  const fixedNote = r.fixedLeaveCount ? ` (확정 연차 ${r.fixedLeaveCount}일 포함 시 남은 ${r.budgetAfterFixed}일 기준)` : '';
+  const fixedNote = r.fixedLeaveCount ? ` · 확정 연차 ${r.fixedLeaveCount}일 제외 후 ${r.budgetAfterFixed}일 기준` : '';
   if (!r.plan.length) {
-    s.innerHTML = `<p class="big">조건에 맞는 연휴를 찾지 못했어요.</p>
-      <p class="help">${start} ~ ${end} 기간, 연차 ${r.budgetAfterFixed}일${fixedNote} 기준입니다. '연휴로 칠 최소 길이'를 줄이거나 '한 번에 쓸 최대 연차'를 늘려 보세요.</p>`;
+    s.innerHTML = `<p class="kicker">${state.year} 연휴 계획</p><p class="big">조건에 맞는 연휴를 찾지 못했어요</p>
+      <p class="hint">${start} ~ ${end}, 연차 ${r.budgetAfterFixed}일${fixedNote}. '연휴로 칠 최소 길이'를 줄이거나 '한 번에 쓸 최대 연차'를 늘려 보세요.</p>`;
   } else {
-    s.innerHTML = `<p class="big">연차 <b>${r.planLeaveUsed}일</b>로 <b>${r.plan.length}번</b>의 연휴, 총 <b>${r.planDaysOff}일</b> 쉬어요</p>
-      <p class="help">${start} ~ ${end} · 사용 가능 연차 ${r.budgetAfterFixed}일${fixedNote}${r.leftover > 0 ? ` · 남는 연차 ${r.leftover}일 (원하는 날 자유롭게)` : ''}</p>`;
+    s.innerHTML = `<p class="kicker">${state.year} 연휴 계획</p><p class="big">연차 <b>${r.planLeaveUsed}일</b>로 <b>${r.plan.length}번</b>의 연휴, 총 <b>${r.planDaysOff}일</b> 쉬어요</p>
+      <p class="hint">${start} ~ ${end} · 사용 가능 연차 ${r.budgetAfterFixed}일${fixedNote}${r.leftover > 0 ? ` · 남는 연차 ${r.leftover}일은 원하는 날에` : ''}</p>`;
   }
   $('plan').innerHTML = r.plan.map((w, i) => planCard(w, i)).join('');
+  renderBoard();
   renderPanel();
   renderMonths(start, end);
 }
 
+function renderBoard() {
+  const r = result;
+  const list = (r.plan.length ? r.plan : r.top).slice(0, 6).sort((a, b) => a.start.localeCompare(b.start));
+  const longest = Math.max(0, ...list.map((w) => w.length));
+  const key = list.map((w) => w.start + w.end).join('|');
+  const changed = renderBoard._key !== undefined && renderBoard._key !== key;
+  renderBoard._key = key;
+  $('board').innerHTML = list.length
+    ? list
+        .map((w, i) => {
+          const st = w.length === longest ? '<span class="st">최장 연휴</span>' : '<span class="st go">탑승 가능</span>';
+          return `<li${changed ? ` class="flip" style="animation-delay:${i * 60}ms"` : ''}>
+            <span class="fl">${flightCode(w)}</span>
+            <span class="from">${md(w.start)}<span class="sub">${weekdayKo(w.start)}</span><span class="to-inline"> → ${md(w.end)}<span class="sub">${weekdayKo(w.end)}</span></span></span>
+            <span class="to">${md(w.end)}<span class="sub">${weekdayKo(w.end)}</span></span>
+            <span class="days r">${w.length}일</span>
+            <span class="leave r">연차 ${w.cost}</span>
+            ${st}
+          </li>`;
+        })
+        .join('')
+    : '<li><span class="fl">—</span><span class="from">조건에 맞는 연휴가 없어요</span></li>';
+  $('board-foot').textContent = `${state.year}년 · 연차 ${r.budgetAfterFixed}일 기준 · 아래에서 조건을 바꾸면 안내판도 바뀝니다`;
+}
+
 function planCard(w, i) {
-  const leave = w.leaveDays.map((d) => `<span class="chip leave">${Number(d.slice(5, 7))}/${Number(d.slice(8))}(${weekdayKo(d)})</span>`).join('');
-  const eff = (w.length / w.cost).toFixed(1).replace(/\.0$/, '');
+  const leave = w.leaveDays.map((d) => `<span class="chip">${mdSlash(d)}(${weekdayKo(d)})</span>`).join('');
   const options = DESTINATIONS.map((d) => `<option value="${d.id}">${d.name}</option>`).join('');
-  return `<li class="card plan-item" data-i="${i}">
-    <div class="pi-head">
-      <span class="pi-len">${w.length}일</span>
-      <div>
-        <p class="pi-range">${formatRange(w)}</p>
-        <p class="pi-sub">연차 ${w.cost}일 → ${w.length}일 연속 휴식 · 연차 1일당 ${eff}일${w.holidays.length ? ` · ${escapeHtml(w.holidays.join(', '))}` : ''}</p>
+  const via = w.holidays.length ? escapeHtml(w.holidays.filter((h) => !/대체공휴일/.test(h)).map((h) => h.replace(' 연휴', '')).filter((h, k, a) => a.indexOf(h) === k).join('·')) : '주말';
+  return `<li class="pass" data-i="${i}">
+    <div class="pass-main">
+      <div class="pass-top"><span>Boarding pass · 탑승권</span><span class="code">${flightCode(w)}</span></div>
+      <p class="sr pi-range">${formatRange(w)}</p>
+      <div class="route" aria-hidden="true">
+        <div class="pt"><span class="d">${md(w.start)}</span><span class="w">${WEEK_FULL[new Date(w.start + 'T00:00:00Z').getUTCDay()]} 출발</span></div>
+        <div class="path"><svg><use href="#i-plane"/></svg><span class="len">${w.length}일 연휴</span></div>
+        <div class="pt to"><span class="d">${md(w.end)}</span><span class="w">${WEEK_FULL[new Date(w.end + 'T00:00:00Z').getUTCDay()]} 도착</span></div>
       </div>
+      <dl class="meta">
+        <div><dt>연휴</dt><dd>${w.length}일</dd></div>
+        <div><dt>연차</dt><dd>${w.cost}일</dd></div>
+        <div><dt>효율</dt><dd>×${effText(w)}</dd></div>
+        <div><dt>경유</dt><dd class="small">${via}</dd></div>
+      </dl>
+      <div class="leave-row"><span class="label">연차 쓸 날</span>${leave}</div>
     </div>
-    <p class="pi-leave"><span class="label">연차 쓸 날</span> ${leave}</p>
-    <div class="travel">
-      <label class="label" for="dest-${i}">이 날짜로 여행 검색</label>
-      <div class="inline">
-        <select id="dest-${i}" data-dest="${i}">${options}</select>
-        <a class="btn small" target="_blank" rel="noopener${affiliateEnabled() ? ' sponsored' : ''}" data-out="flight" data-i="${i}" href="#">✈️ 항공권</a>
-        <a class="btn small" target="_blank" rel="noopener${affiliateEnabled() ? ' sponsored' : ''}" data-out="hotel" data-i="${i}" href="#">🏨 숙소</a>
+    <div class="pass-stub">
+      <label class="label" for="dest-${i}">이 날짜로 떠나기</label>
+      <select id="dest-${i}" data-dest="${i}">${options}</select>
+      <div class="stub-btns">
+        <a class="btn primary" target="_blank" rel="${relOpts()}" data-out="flight" data-i="${i}" href="#"><svg><use href="#i-plane"/></svg>항공권</a>
+        <a class="btn" target="_blank" rel="${relOpts()}" data-out="hotel" data-i="${i}" href="#"><svg><use href="#i-bed"/></svg>숙소</a>
       </div>
-      <p class="help travel-note" data-note="${i}"></p>
+      <p class="hint travel-note" data-note="${i}"></p>
+      <div class="barcode" aria-hidden="true"></div>
     </div>
   </li>`;
 }
@@ -221,24 +263,24 @@ function updateTravel(i) {
   } else {
     h.hidden = true;
   }
-  document.querySelector(`[data-note="${i}"]`).textContent = `${dest.name} 왕복 ${w.start} 출발 · ${w.end} 귀국 기준 (트립닷컴 새 창). 실제 출국·귀국일은 연휴 안에서 조정하세요.${hu ? '' : ' 이 목적지는 숙소 바로가기를 아직 지원하지 않습니다.'}`;
+  document.querySelector(`[data-note="${i}"]`).textContent = `${dest.name} 왕복 ${mdSlash(w.start)} 출발 · ${mdSlash(w.end)} 귀국 기준, 트립닷컴에서 열려요.${hu ? '' : ' 이 도시는 숙소 바로가기를 준비 중이에요.'}`;
 }
 
 function listRow(w) {
-  const eff = w.cost ? `연차 ${w.cost}일 · 1일당 ${(w.length / w.cost).toFixed(1).replace(/\.0$/, '')}일` : '연차 0일';
-  const leave = w.leaveDays.length ? ` · 연차: ${w.leaveDays.map((d) => `${Number(d.slice(5, 7))}/${Number(d.slice(8))}`).join(', ')}` : '';
-  return `<li><b>${w.length}일</b> ${formatRange(w)} <span class="muted">${eff}${leave}${w.holidays.length ? ` · ${escapeHtml(w.holidays.join(', '))}` : ''}</span></li>`;
+  const eff = w.cost ? `연차 ${w.cost}일 · 효율 ×${effText(w)}` : '연차 없이';
+  const leave = w.leaveDays.length ? ` · ${w.leaveDays.map(mdSlash).join(', ')}` : '';
+  return `<li><span class="n">${w.length}일</span><span class="r">${formatRange(w)}</span><span class="m">${eff}${leave}${w.holidays.length ? ` · ${escapeHtml(w.holidays.join(', '))}` : ''}</span></li>`;
 }
 
 function renderPanel() {
   const r = result;
   const map = {
-    top: [r.top, '연차 1일당 쉬는 날이 많은 순서입니다. 서로 겹치지 않는 후보만 보여 줍니다.'],
-    longest: [r.longest, `연차를 한 번에 몰아 쓸 때 일수별 가장 긴 연휴입니다 (최대 ${state.maxLeavePerBreak}일).`],
-    natural: [r.natural, '연차를 쓰지 않아도 3일 이상 이어지는 휴일입니다.'],
+    top: [r.top, '연차 하루로 가장 많이 쉬는 순서예요. 서로 겹치지 않는 후보만 보여 드려요.'],
+    longest: [r.longest, `한 번에 몰아 쓸 때 일수별로 가장 긴 연휴예요 (최대 ${state.maxLeavePerBreak}일).`],
+    natural: [r.natural, '연차 없이도 3일 이상 이어지는 휴일이에요.'],
   };
   const [list, desc] = map[currentTab];
-  $('panel').innerHTML = `<p class="help">${desc}</p>${list.length ? `<ul class="rows">${list.map(listRow).join('')}</ul>` : '<p>해당하는 연휴가 없습니다.</p>'}`;
+  $('panel').innerHTML = `<p class="hint">${desc}</p>${list.length ? `<ul class="rows">${list.map(listRow).join('')}</ul>` : '<p class="hint">해당하는 연휴가 없습니다.</p>'}`;
   document.querySelectorAll('[role=tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === currentTab)));
 }
 
@@ -282,7 +324,7 @@ function renderMonths(start, end) {
         if (inBreak.has(iso)) cls += ' brk';
         cells += `<span class="dc ${cls}"${title ? ` title="${escapeHtml(title)}"` : ''}>${d}</span>`;
       }
-      return `<div class="month card"><p class="mt">${yy}년 ${mm}월</p><div class="grid">${cells}</div></div>`;
+      return `<div class="month"><p class="mt">${yy}년 ${mm}월</p><div class="grid">${cells}</div></div>`;
     })
     .join('');
 }

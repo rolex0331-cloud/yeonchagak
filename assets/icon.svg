@@ -1,1 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0f766e"/><rect x="8" y="42" width="48" height="5" rx="2.5" fill="#9FE1CB"/><circle cx="16" cy="32" r="7.5" fill="#F7C1C1"/><circle cx="32" cy="32" r="7.5" fill="#ffffff"/><circle cx="48" cy="32" r="7.5" fill="#F7C1C1"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="15" fill="#0A5BD8"/>
+  <rect x="4" y="44" width="15" height="10" rx="4" fill="#FF6A55"/>
+  <rect x="21" y="38" width="15" height="10" rx="4" fill="#3EE0B5"/>
+  <rect x="38" y="44" width="15" height="10" rx="4" fill="#FF6A55"/>
+  <g transform="translate(42 20) rotate(-40) scale(1.7)" fill="#FFFFFF">
+    <path d="M-7.5 0 C-7.5 -1.1 -6.5 -1.4 -5.5 -1.4 L5.2 -1.4 C7.2 -1.4 8.6 -0.7 8.6 0 C8.6 0.7 7.2 1.4 5.2 1.4 L-5.5 1.4 C-6.5 1.4 -7.5 1.1 -7.5 0 Z"/>
+    <path d="M-0.6 -1.2 L-3.8 -8.2 L-1.6 -8.2 L4.2 -1.2 Z"/>
+    <path d="M-0.6 1.2 L-3.8 8.2 L-1.6 8.2 L4.2 1.2 Z"/>
+    <path d="M-5.6 -1 L-7.6 -4.4 L-6.3 -4.4 L-3.8 -1 Z"/>
+    <path d="M-5.6 1 L-7.6 4.4 L-6.3 4.4 L-3.8 1 Z"/>
+  </g>
+</svg>

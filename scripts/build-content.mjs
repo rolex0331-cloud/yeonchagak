@@ -1,6 +1,6 @@
 // 엔진 계산 결과로 연도별 공휴일·꿀조합 정적 페이지와 sitemap.xml을 생성한다.
 // 사용: node scripts/build-content.mjs  (결과물은 저장소에 커밋되어 정적으로 배포됨)
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { plan, formatRange, weekdayKo } from '../assets/engine.js';
@@ -12,19 +12,23 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&l
 const md = (iso) => `${Number(iso.slice(5, 7))}월 ${Number(iso.slice(8))}일(${weekdayKo(iso)})`;
 const short = (iso) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8))}(${weekdayKo(iso)})`;
 
+const LOGO = readFileSync(join(root, 'assets', 'logo-inline.svg'), 'utf8').trim();
 function header(prefix) {
   return `<header class="site-header"><div class="wrap header-in">
-  <a class="logo" href="${prefix}"><svg class="logo-mark" viewBox="0 0 40 30" aria-hidden="true"><rect x="1" y="22" width="38" height="4" rx="2" fill="#9FE1CB"/><circle cx="7" cy="15" r="6" fill="#E24B4A"/><circle cx="20" cy="15" r="6" fill="#1D9E75"/><circle cx="33" cy="15" r="6" fill="#E24B4A"/></svg>징검</a>
-  <nav class="nav"><a href="${prefix}2027-holidays/">2027 공휴일·꿀조합</a><a href="${prefix}guide/">연차 규칙</a><a href="${prefix}about/">소개</a></nav>
+  <a class="logo" href="${prefix}" aria-label="징검 홈">${LOGO}</a>
+  <nav class="nav" aria-label="주요 메뉴"><a href="${prefix}2027-holidays/">2027 공휴일</a><a href="${prefix}guide/">연차 규칙</a><a href="${prefix}about/">소개</a></nav>
 </div></header>`;
 }
 function footer(prefix) {
   return `<footer class="site-footer"><div class="wrap">
-  <p>공휴일 데이터 ${DATA_VERIFIED_AT} 확인 기준. 임시공휴일이 새로 지정되면 반영 전까지 빠질 수 있습니다.</p>
-  <p><a href="${prefix}">연차 계산기</a> · <a href="${prefix}about/#privacy">개인정보 안내</a> · <a href="${prefix}about/">소개·문의</a></p>
+  <p>공휴일 데이터 ${DATA_VERIFIED_AT} 확인 기준. 새로 지정된 임시공휴일은 반영 전까지 빠질 수 있어요.</p>
+  <p class="foot-links"><a href="${prefix}">연차 계산기</a><a href="${prefix}about/#privacy">개인정보 안내</a><a href="${prefix}about/">소개·문의</a></p>
 </div></footer>`;
 }
 export function page({ title, desc, path, body, prefix = '../' }) {
+  const m = body.match(/^\s*(<h1>[\s\S]*?<\/h1>\s*<p class="lead">[\s\S]*?<\/p>)/);
+  const top = m ? m[1] : '';
+  const rest = m ? body.slice(m[0].length) : body;
   return `<!doctype html>
 <html lang="ko">
 <head>
@@ -38,15 +42,19 @@ export function page({ title, desc, path, body, prefix = '../' }) {
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${BASE}${path}">
 <meta property="og:image" content="${BASE}assets/og.png">
-<meta name="theme-color" content="#0f766e">
+<meta name="theme-color" content="#0D1726">
 <link rel="icon" href="${prefix}assets/icon.svg" type="image/svg+xml">
+<link rel="preload" href="${prefix}assets/fonts/pretendard-subset.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="${prefix}assets/style.css">
 </head>
 <body>
+<div class="doc-top">
 ${header(prefix)}
-<main class="wrap doc">
-${body}
-</main>
+<div class="wrap doc">${top}</div>
+</div>
+<main class="wrap doc"><div class="doc-body">
+${rest}
+</div></main>
 ${footer(prefix)}
 </body>
 </html>
@@ -187,6 +195,9 @@ const aboutBody = `
 <p>계산 결과는 참고용입니다. 실제 연차 사용 가능 여부와 휴일은 회사 취업규칙·근로계약과 정부 발표를 따릅니다.</p>
 <p class="cta"><a class="btn primary" href="../">연차 계산하기 →</a></p>
 `;
+
+write('index.html', readFileSync(join(root, 'scripts', 'index.template.html'), 'utf8').replace('{{LOGO}}', LOGO));
+write('404.html', readFileSync(join(root, 'scripts', '404.template.html'), 'utf8').replace('{{LOGO}}', LOGO));
 
 const yearPages = YEARS.filter((y) => y >= 2027);
 for (const y of yearPages) write(`${y}-holidays/index.html`, yearPage(y));
