@@ -18,7 +18,7 @@
 | 배포 | 완료 — https://rolex0331-cloud.github.io/yeonchagak/ |
 | 자동 테스트 | 단위 27 + E2E 11 통과 (로컬·Actions·운영 주소) |
 | 자동 관리 | test-and-deploy(푸시 시), weekly-ops(매주 월, 수동 실행으로 동작 확인) 등록·가동 |
-| 제휴 | **미가입·미연결** (config의 AFFILIATE.params 비어 있음, 고지 숨김) |
+| 제휴 | **신청 완료·심사 중** (2026-10-14 트립닷컴 제휴 파트너·개인·콘텐츠 관련·CPS로 신청, USD 정산). 링크 미연결: config의 AFFILIATE.params 비어 있음, 고지 숨김 |
 | 측정 | **미연결** (ANALYTICS.goatcounterCode 비어 있음, 요청 0건) |
 | 검색 등록 | **안 함** (Search Console·네이버 서치어드바이저는 소유자 인증 필요) |
 | 실제 매출 | 없음 |
@@ -31,7 +31,7 @@
 - `docs/` 시장조사, 비용, 운영·복구, 검증, 스크린샷
 
 ## 남은 차단 요인 (사용자만 가능)
-1. 트립닷컴 제휴 가입·승인 → 대시보드 링크 파라미터를 config에 입력 (docs/operations.md)
+1. 트립닷컴 제휴 승인 대기 중 → 승인 후 대시보드에서 제휴 링크 1개 생성해 전달 → 파라미터를 config에 입력 (docs/operations.md)
 2. (선택) GoatCounter 계정 → 코드 입력
 3. Google Search Console / 네이버 서치어드바이저 등록 → 인증 파일·메타 값 전달 시 반영
 
