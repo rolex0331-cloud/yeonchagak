@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: '0 0 * * 1' # 매주 월요일 09:00 KST
   workflow_dispatch:
+    inputs:
+      simulate_diff:
+        description: '알림 경로 점검용: 가짜 차이로 이슈 생성 (생성된 이슈는 테스트로 표시)'
+        type: boolean
+        default: false
 permissions:
   contents: read
   issues: write
@@ -19,6 +24,11 @@ jobs:
         id: check
         run: |
           set +e
+          if [ "${{ inputs.simulate_diff }}" = "true" ]; then
+            echo "[테스트] 알림 경로 점검용 가짜 차이" > report.txt
+            echo "code=1" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           REPORT_FILE=report.txt node scripts/check-holidays.mjs
           echo "code=$?" >> "$GITHUB_OUTPUT"
       - name: 차이가 있으면 이슈 생성/갱신
@@ -27,6 +37,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           title="공휴일 데이터 차이 감지"
+          [ "${{ inputs.simulate_diff }}" = "true" ] && title="[테스트] $title"
           body=$(printf '공개 공휴일 캘린더와 assets/holidays.js 사이에 차이가 있습니다.\n\n```\n%s\n```\n\n월력요항·정부 발표를 확인한 뒤 데이터를 고치고 push하면 테스트 통과 시 자동 배포됩니다. 운영 사이트는 자동으로 바뀌지 않았습니다.\n\n(자동 점검 %s)' "$(cat report.txt)" "$(date -u +%F)")
           num=$(gh issue list --state open --search "in:title $title" --json number --jq '.[0].number')
           if [ -n "$num" ]; then gh issue comment "$num" --body "$body"; else gh issue create --title "$title" --body "$body"; fi
