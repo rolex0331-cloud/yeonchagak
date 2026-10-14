@@ -3,6 +3,7 @@ import { HOLIDAYS, YEARS, DATA_VERIFIED_AT } from './holidays.js';
 import { defaultState, encodeState, decodeState } from './state.js';
 import { DESTINATIONS, AFFILIATE, affiliateEnabled, ANALYTICS } from './config.js';
 import { flightUrl, hotelUrl } from './links.js';
+import { PLACES, climate, recommend, tzText } from './places.js';
 
 const $ = (id) => document.getElementById(id);
 const STORE_KEY = 'yeonchagak:v1';
@@ -54,6 +55,14 @@ if (!YEARS.includes(state.year)) state.year = base.year;
 let result = null;
 let currentTab = 'top';
 
+const isFree = () => state.mode === 'free';
+const passes = () => (result ? (isFree() ? result.natural : result.plan) : []);
+
+function applyMode() {
+  document.body.classList.toggle('mode-free', isFree());
+  $('toggles-legend').textContent = isFree() ? '나는' : '우리 회사는';
+}
+
 function rangeFor(s) {
   const yStart = `${s.year}-01-01`;
   const yEnd = `${s.year}-12-31`;
@@ -73,6 +82,8 @@ function fillForm() {
   $('minBreak').value = String(state.minBreak);
   if (!$('minBreak').value) $('minBreak').value = '4';
   document.querySelectorAll('input[name=goal]').forEach((r) => (r.checked = r.value === (state.goal || 'long')));
+  document.querySelectorAll('input[name=mode]').forEach((r) => (r.checked = r.value === (state.mode || 'leave')));
+  applyMode();
   $('holidaysOff').checked = state.holidaysOff;
   $('substituteOff').checked = state.substituteOff;
   $('laborOff').checked = state.laborOff;
@@ -89,6 +100,7 @@ function readForm() {
   state.maxLeavePerBreak = Number($('maxLeavePerBreak').value);
   state.minBreak = Number($('minBreak').value);
   state.goal = document.querySelector('input[name=goal]:checked')?.value || 'long';
+  state.mode = document.querySelector('input[name=mode]:checked')?.value || 'leave';
   state.holidaysOff = $('holidaysOff').checked;
   state.substituteOff = $('substituteOff').checked;
   state.laborOff = $('laborOff').checked;
@@ -133,7 +145,7 @@ function run({ scroll = false, userAction = false } = {}) {
     {
       start,
       end,
-      budget: state.budget,
+      budget: isFree() ? 0 : state.budget,
       minBreak: state.minBreak,
       maxLeavePerBreak: state.maxLeavePerBreak,
       goal: state.goal,
@@ -141,8 +153,8 @@ function run({ scroll = false, userAction = false } = {}) {
       substituteOff: state.substituteOff,
       laborOff: state.laborOff,
       extraOff: state.extraOff,
-      fixedLeave: state.fixedLeave,
-      blackout: state.blackout,
+      fixedLeave: isFree() ? [] : state.fixedLeave,
+      blackout: isFree() ? [] : state.blackout,
     },
     HOLIDAYS
   );
@@ -176,14 +188,21 @@ function render() {
   const { start, end } = rangeFor(state);
   const s = $('summary');
   const fixedNote = r.fixedLeaveCount ? ` · 확정 연차 ${r.fixedLeaveCount}일 제외 후 ${r.budgetAfterFixed}일 기준` : '';
-  if (!r.plan.length) {
+  const list = passes();
+  if (isFree()) {
+    const total = list.reduce((a, w) => a + w.length, 0);
+    s.innerHTML = list.length
+      ? `<p class="kicker">${state.year} 빨간 날 연휴</p><p class="big">연차 없이 <b>${list.length}번</b>의 연휴, 총 <b>${total}일</b> 쉬어요</p><p class="hint">${start} ~ ${end} · 3일 이상 이어지는 휴일만 모았어요</p>`
+      : `<p class="kicker">${state.year} 빨간 날 연휴</p><p class="big">남은 기간에 3일 이상 연휴가 없어요</p><p class="hint">다른 연도를 선택해 보세요.</p>`;
+  } else if (!r.plan.length) {
     s.innerHTML = `<p class="kicker">${state.year} 연휴 계획</p><p class="big">조건에 맞는 연휴를 찾지 못했어요</p>
       <p class="hint">${start} ~ ${end}, 연차 ${r.budgetAfterFixed}일${fixedNote}. '연휴로 칠 최소 길이'를 줄이거나 '한 번에 쓸 최대 연차'를 늘려 보세요.</p>`;
   } else {
     s.innerHTML = `<p class="kicker">${state.year} 연휴 계획</p><p class="big">연차 <b>${r.planLeaveUsed}일</b>로 <b>${r.plan.length}번</b>의 연휴, 총 <b>${r.planDaysOff}일</b> 쉬어요</p>
       <p class="hint">${start} ~ ${end} · 사용 가능 연차 ${r.budgetAfterFixed}일${fixedNote}${r.leftover > 0 ? ` · 남는 연차 ${r.leftover}일은 원하는 날에` : ''}</p>`;
   }
-  $('plan').innerHTML = r.plan.map((w, i) => planCard(w, i)).join('');
+  $('plan').innerHTML = list.map((w, i) => planCard(w, i)).join('');
+  list.forEach((_, i) => updateTravel(i));
   renderBoard();
   renderPanel();
   renderMonths(start, end);
@@ -191,7 +210,7 @@ function render() {
 
 function renderBoard() {
   const r = result;
-  const list = (r.plan.length ? r.plan : r.top).slice(0, 6).sort((a, b) => a.start.localeCompare(b.start));
+  const list = (passes().length ? passes() : r.top).slice().sort((a, b) => b.length - a.length).slice(0, 6).sort((a, b) => a.start.localeCompare(b.start));
   const longest = Math.max(0, ...list.map((w) => w.length));
   const key = list.map((w) => w.start + w.end).join('|');
   const changed = renderBoard._key !== undefined && renderBoard._key !== key;
@@ -205,19 +224,33 @@ function renderBoard() {
             <span class="from">${md(w.start)}<span class="sub">${weekdayKo(w.start)}</span><span class="to-inline"> → ${md(w.end)}<span class="sub">${weekdayKo(w.end)}</span></span></span>
             <span class="to">${md(w.end)}<span class="sub">${weekdayKo(w.end)}</span></span>
             <span class="days r">${w.length}일</span>
-            <span class="leave r">연차 ${w.cost}</span>
+            <span class="leave r">${w.cost ? `연차 ${w.cost}` : '연차 0'}</span>
             ${st}
           </li>`;
         })
         .join('')
     : '<li><span class="fl">—</span><span class="from">조건에 맞는 연휴가 없어요</span></li>';
-  $('board-foot').textContent = `${state.year}년 · 연차 ${r.budgetAfterFixed}일 기준 · 아래에서 조건을 바꾸면 안내판도 바뀝니다`;
+  $('board-foot').textContent = isFree() ? `${state.year}년 · 연차 없이 쉬는 연휴 · 아래에서 조건을 바꾸면 안내판도 바뀝니다` : `${state.year}년 · 연차 ${r.budgetAfterFixed}일 기준 · 아래에서 조건을 바꾸면 안내판도 바뀝니다`;
 }
 
+const destName = (id) => (DESTINATIONS.find((d) => d.id === id) || {}).name || id;
+const dayDiff = (iso) => Math.round((toDayNum(iso) - toDayNum(TODAY)));
+const isPeak = (w) => w.holidays.some((h) => /설날|추석/.test(h));
+
 function planCard(w, i) {
-  const leave = w.leaveDays.map((d) => `<span class="chip">${mdSlash(d)}(${weekdayKo(d)})</span>`).join('');
-  const options = DESTINATIONS.map((d) => `<option value="${d.id}">${d.name}</option>`).join('');
+  const leave = w.leaveDays.length
+    ? w.leaveDays.map((d) => `<span class="chip">${mdSlash(d)}(${weekdayKo(d)})</span>`).join('')
+    : '<span class="chip free">연차 필요 없음</span>';
+  const month = Number(w.start.slice(5, 7));
+  const recs = recommend(DESTINATIONS.map((d) => d.id), w.length, month);
+  const pick = recs[0]?.id || DESTINATIONS[0].id;
+  const options = DESTINATIONS.map((d) => `<option value="${d.id}"${d.id === pick ? ' selected' : ''}>${d.name}</option>`).join('');
+  const chips = recs
+    .slice(0, 3)
+    .map((r) => `<button type="button" class="dchip${r.id === pick ? ' on' : ''}" data-pick="${r.id}" data-i="${i}">${destName(r.id)} <span>${r.c.hi}°</span></button>`)
+    .join('');
   const via = w.holidays.length ? escapeHtml(w.holidays.filter((h) => !/대체공휴일/.test(h)).map((h) => h.replace(' 연휴', '')).filter((h, k, a) => a.indexOf(h) === k).join('·')) : '주말';
+  const dd = dayDiff(w.start);
   return `<li class="pass" data-i="${i}">
     <div class="pass-main">
       <div class="pass-top"><span>Boarding pass · 탑승권</span><span class="code">${flightCode(w)}</span></div>
@@ -230,29 +263,33 @@ function planCard(w, i) {
       <dl class="meta">
         <div><dt>연휴</dt><dd>${w.length}일</dd></div>
         <div><dt>연차</dt><dd>${w.cost}일</dd></div>
-        <div><dt>효율</dt><dd>×${effText(w)}</dd></div>
+        <div><dt>${w.cost ? '효율' : '출발까지'}</dt><dd>${w.cost ? `×${effText(w)}` : dd > 0 ? `D-${dd}` : '진행 중'}</dd></div>
         <div><dt>경유</dt><dd class="small">${via}</dd></div>
       </dl>
       <div class="leave-row"><span class="label">연차 쓸 날</span>${leave}</div>
+      ${isPeak(w) ? '<p class="peak">명절 연휴는 출발 수요가 몰리는 기간이에요. 날짜가 정해졌다면 항공권을 일찍 확인해 보세요.</p>' : ''}
     </div>
     <div class="pass-stub">
-      <label class="label" for="dest-${i}">이 날짜로 떠나기</label>
+      <span class="label">이번 연휴 추천 여행지</span>
+      <div class="dchips">${chips}</div>
+      <label class="sr" for="dest-${i}">여행지 선택</label>
       <select id="dest-${i}" data-dest="${i}">${options}</select>
+      <ul class="facts" data-facts="${i}"></ul>
       <div class="stub-btns">
         <a class="btn primary" target="_blank" rel="${relOpts()}" data-out="flight" data-i="${i}" href="#"><svg><use href="#i-plane"/></svg>항공권</a>
         <a class="btn" target="_blank" rel="${relOpts()}" data-out="hotel" data-i="${i}" href="#"><svg><use href="#i-bed"/></svg>숙소</a>
       </div>
       <p class="hint travel-note" data-note="${i}"></p>
-      <div class="barcode" aria-hidden="true"></div>
     </div>
   </li>`;
 }
 
 function updateTravel(i) {
-  const w = result.plan[i];
+  const w = passes()[i];
   const sel = document.querySelector(`[data-dest="${i}"]`);
   if (!w || !sel) return;
   const dest = DESTINATIONS.find((d) => d.id === sel.value) || DESTINATIONS[0];
+  document.querySelectorAll(`[data-pick][data-i="${i}"]`).forEach((b) => b.classList.toggle('on', b.dataset.pick === dest.id));
   const f = document.querySelector(`[data-out="flight"][data-i="${i}"]`);
   const h = document.querySelector(`[data-out="hotel"][data-i="${i}"]`);
   f.href = flightUrl(dest, w.start, w.end);
@@ -263,7 +300,19 @@ function updateTravel(i) {
   } else {
     h.hidden = true;
   }
-  document.querySelector(`[data-note="${i}"]`).textContent = `${dest.name} 왕복 ${mdSlash(w.start)} 출발 · ${mdSlash(w.end)} 귀국 기준, 트립닷컴에서 열려요.${hu ? '' : ' 이 도시는 숙소 바로가기를 준비 중이에요.'}`;
+  const month = Number(w.start.slice(5, 7));
+  const c = climate(dest.id, month);
+  const pl = PLACES[dest.id];
+  const facts = [];
+  if (c) {
+    facts.push(`<li><span>${month}월 날씨</span><b>${c.hi}° / ${c.lo}°</b></li>`);
+    facts.push(`<li><span>비행</span><b>직항 ${pl.flight}</b></li>`);
+    facts.push(`<li><span>시차</span><b>${tzText(pl.tz)}</b></li>`);
+    const warn = [c.rainy ? `비가 많은 달 (평년 ${c.rain}mm)` : '', c.typhoon ? '태풍 영향 가능 시기' : ''].filter(Boolean);
+    if (warn.length) facts.push(`<li class="warn"><span>참고</span><b>${warn.join(' · ')}</b></li>`);
+  }
+  document.querySelector(`[data-facts="${i}"]`).innerHTML = facts.join('');
+  document.querySelector(`[data-note="${i}"]`).textContent = `${dest.name} 왕복 ${mdSlash(w.start)} 출발 · ${mdSlash(w.end)} 귀국 기준, 트립닷컴에서 열려요.${hu ? '' : ' 이 도시는 숙소 바로가기를 준비 중이에요.'}${c ? ` 날씨는 ${pl.src} 1991–2020 평년값.` : ''}`;
 }
 
 function listRow(w) {
@@ -285,9 +334,9 @@ function renderPanel() {
 }
 
 function renderMonths(start, end) {
-  const leave = new Set(result.plan.flatMap((w) => w.leaveDays));
+  const leave = new Set(passes().flatMap((w) => w.leaveDays));
   const inBreak = new Set();
-  result.plan.forEach((w) => {
+  passes().forEach((w) => {
     for (let n = toDayNum(w.start); n <= toDayNum(w.end); n++) inBreak.add(fromDayNum(n));
   });
   const dayMap = new Map(result.days.map((d) => [d.date, d]));
@@ -362,8 +411,8 @@ async function copyText(text) {
 }
 
 $('dl-ics').addEventListener('click', () => {
-  if (!result?.plan.length) return toast('저장할 연휴가 없습니다.');
-  const blob = new Blob([toICS(result.plan, { title: `징검 ${state.year} 연휴 계획` })], { type: 'text/calendar;charset=utf-8' });
+  if (!passes().length) return toast('저장할 연휴가 없습니다.');
+  const blob = new Blob([toICS(passes(), { title: `징검 ${state.year} 연휴 계획` })], { type: 'text/calendar;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `yeonchagak-${state.year}.ics`;
@@ -386,8 +435,8 @@ $('copy-request').addEventListener('click', async () => {
 
 $('share').addEventListener('click', async () => {
   const url = location.href;
-  const best = result?.plan?.slice().sort((a, b) => b.length - a.length)[0];
-  const text = best ? `내 연차 ${result.planLeaveUsed}일로 ${result.planDaysOff}일 쉬는 ${state.year}년 플랜 (최장 ${best.length}일 연휴)` : '징검 — 내 연차로 가장 길게 쉬는 날짜';
+  const best = passes().slice().sort((a, b) => b.length - a.length)[0];
+  const text = !best ? '징검 — 빨간 날 사이 징검다리 놓고 떠나요' : isFree() ? `${state.year}년 빨간 날 연휴 ${passes().length}번, 최장 ${best.length}일 (${formatRange(best)})` : `내 연차 ${result.planLeaveUsed}일로 ${result.planDaysOff}일 쉬는 ${state.year}년 플랜 (최장 ${best.length}일 연휴)`;
   if (navigator.share) {
     try {
       await navigator.share({ title: '징검', text, url });
@@ -411,6 +460,13 @@ $('planner').addEventListener('submit', (e) => {
 });
 
 document.querySelectorAll('input[name=goal]').forEach((r) => r.addEventListener('change', () => run({ userAction: true })));
+document.querySelectorAll('input[name=mode]').forEach((r) =>
+  r.addEventListener('change', () => {
+    state.mode = r.value;
+    applyMode();
+    run({ userAction: true });
+  })
+);
 document.querySelectorAll('.step').forEach((b) =>
   b.addEventListener('click', () => {
     const input = $('budget');
@@ -475,13 +531,18 @@ $('plan').addEventListener('change', (e) => {
   if (sel) updateTravel(Number(sel.dataset.dest));
 });
 $('plan').addEventListener('click', (e) => {
+  const chip = e.target.closest('[data-pick]');
+  if (chip) {
+    const sel = document.querySelector(`[data-dest="${chip.dataset.i}"]`);
+    sel.value = chip.dataset.pick;
+    updateTravel(Number(chip.dataset.i));
+    return;
+  }
   const a = e.target.closest('[data-out]');
   if (!a) return;
   updateTravel(Number(a.dataset.i)); // 클릭 직전 최신 링크 보장
   track(`outbound_${a.dataset.out}`);
 });
-const observer = new MutationObserver(() => result?.plan.forEach((_, i) => updateTravel(i)));
-observer.observe($('plan'), { childList: true });
 
 // ---- 초기화
 $('verified').textContent = DATA_VERIFIED_AT;

@@ -12,6 +12,7 @@ export function defaultState(today, years) {
   const y = month >= 10 && years.includes(cur + 1) ? cur + 1 : years.includes(cur) ? cur : Math.max(...years);
   return {
     year: y,
+    mode: 'leave',
     start: null,
     end: null,
     budget: 15,
@@ -30,6 +31,7 @@ export function defaultState(today, years) {
 export function encodeState(s) {
   const p = new URLSearchParams();
   p.set('y', String(s.year));
+  if (s.mode === 'free') p.set('mode', 'free');
   p.set('b', String(s.budget));
   p.set('m', String(s.maxLeavePerBreak));
   p.set('l', String(s.minBreak));
@@ -50,6 +52,7 @@ export function decodeState(query, base) {
   if (!p.has('y') && !p.has('b')) return null;
   const s = { ...base };
   s.year = int(p.get('y'), base.year);
+  s.mode = p.get('mode') === 'free' ? 'free' : 'leave';
   s.budget = int(p.get('b'), base.budget);
   s.maxLeavePerBreak = int(p.get('m'), base.maxLeavePerBreak);
   s.minBreak = int(p.get('l'), base.minBreak);

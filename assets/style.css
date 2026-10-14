@@ -235,8 +235,8 @@ input[type=date] { width: auto; max-width: 100%; flex: 1 1 140px; }
 
 /* 탑승권 */
 .passes { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
-.pass { --notch: 14px; display: grid; grid-template-columns: minmax(0, 1fr) 280px; background: var(--card); border-radius: var(--radius-lg); box-shadow: var(--shadow); position: relative; }
-.pass::before, .pass::after { content: ''; position: absolute; width: calc(var(--notch) * 2); height: calc(var(--notch) * 2); border-radius: 50%; background: var(--paper); right: calc(280px - var(--notch)); }
+.pass { --notch: 14px; display: grid; grid-template-columns: minmax(0, 1fr) 320px; background: var(--card); border-radius: var(--radius-lg); box-shadow: var(--shadow); position: relative; }
+.pass::before, .pass::after { content: ''; position: absolute; width: calc(var(--notch) * 2); height: calc(var(--notch) * 2); border-radius: 50%; background: var(--paper); right: calc(320px - var(--notch)); }
 .pass::before { top: calc(var(--notch) * -1); }
 .pass::after { bottom: calc(var(--notch) * -1); }
 .pass-main { padding: 22px 26px 22px; min-width: 0; }
@@ -359,3 +359,31 @@ input[type=date] { width: auto; max-width: 100%; flex: 1 1 140px; }
 @media (max-width: 520px) { .logo-svg { height: 34px; } }
 .hero .logo-svg .fly, .doc-top .logo-svg .fly { fill: var(--amber); }
 .hero .logo-svg .fly-path, .doc-top .logo-svg .fly-path { stroke: var(--amber); }
+
+/* 계획 방식 */
+.mode { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 6px; background: var(--paper); border-radius: 18px; margin-bottom: 24px; }
+.mode label { position: relative; cursor: pointer; }
+.mode input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+.mode span { display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-radius: 13px; transition: background 0.15s, box-shadow 0.15s; height: 100%; }
+.mode b { font-size: 16px; font-weight: 750; letter-spacing: -0.02em; }
+.mode small { font-size: 13px; color: var(--muted); font-weight: 500; }
+.mode input:checked + span { background: var(--card); box-shadow: var(--shadow); }
+.mode input:checked + span b { color: var(--sky); }
+.mode input:focus-visible + span { outline: 3px solid color-mix(in srgb, var(--sky) 55%, transparent); outline-offset: 2px; }
+.mode-free .leave-only { display: none !important; }
+.mode-free .opts { grid-template-columns: 1fr; }
+
+/* 탑승권 여행 정보 */
+.dchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dchip { border: 1px solid var(--line-2); background: var(--card); color: var(--ink); border-radius: 999px; min-height: 36px; padding: 0 12px; font: 650 14px/1 var(--font); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+.dchip span { color: var(--muted); font-weight: 600; font-size: 13px; }
+.dchip:hover { border-color: var(--ink-2); }
+.dchip.on { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.dchip.on span { color: color-mix(in srgb, var(--card) 70%, transparent); }
+.facts { list-style: none; margin: 2px 0 0; padding: 10px 12px; background: var(--paper); border-radius: 12px; display: grid; gap: 6px; font-size: 14px; }
+.facts li { display: flex; justify-content: space-between; gap: 10px; }
+.facts span { color: var(--muted); font-weight: 600; }
+.facts b { font-weight: 700; text-align: right; }
+.facts li.warn b { color: var(--coral-ink); font-size: 13px; }
+.peak { margin: 14px 0 0; font-size: 13.5px; color: var(--ink-2); background: var(--sky-soft); border-radius: 10px; padding: 9px 12px; }
+.chip.free { background: var(--paper); color: var(--muted); }

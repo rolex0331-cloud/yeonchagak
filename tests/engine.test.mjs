@@ -234,3 +234,15 @@ test('제휴 파라미터 설정 시 링크에 붙는다', () => {
     AFFILIATE.params = {};
   }
 });
+
+test('여행지 추천: 짧은 연휴는 가까운 곳만, 평년값 반올림', async () => {
+  const { recommend, climate, tzText } = await import('../assets/places.js');
+  const ids = ['tyo', 'osa', 'fuk', 'tpe', 'hkg', 'dad', 'bkk', 'cju'];
+  const short = recommend(ids, 4, 5).map((r) => r.id);
+  assert.ok(!short.includes('bkk') && !short.includes('dad') && !short.includes('hkg'));
+  assert.ok(recommend(ids, 9, 1).map((r) => r.id).includes('bkk'));
+  assert.deepEqual(climate('tyo', 9), { hi: 28, lo: 20, rain: 225, rainy: true, typhoon: true });
+  assert.equal(climate('dad', 10).rainy, true);
+  assert.equal(tzText(0), '시차 없음');
+  assert.equal(tzText(-2), '한국보다 2시간 느림');
+});

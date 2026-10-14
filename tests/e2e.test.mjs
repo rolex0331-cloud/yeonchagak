@@ -238,3 +238,37 @@ test('제휴·측정 설정을 넣으면: 고지 표시, 링크에 파라미터,
   assert.ok(counted.every((c) => !/2027-|\d{4}-\d{2}-\d{2}/.test(c)), '이벤트에 날짜·입력값 없음');
   await page.close();
 });
+
+test('연차가 없어요 모드: 빨간 날 연휴를 탑승권으로, 연차 입력은 숨김, 링크 유지', async () => {
+  const { page, errors } = await open('?y=2027&b=15');
+  await page.click('input[name=mode][value=free]');
+  await new Promise((r) => setTimeout(r, 200));
+  assert.equal(await page.$eval('.q', (el) => getComputedStyle(el).display), 'none');
+  assert.match(await text(page, '#summary'), /연차 없이 \d+번의 연휴, 총 \d+일 쉬어요/);
+  const ranges = await page.$$eval('#plan .pi-range', (els) => els.map((e) => e.textContent));
+  assert.ok(ranges.some((r) => /9\/14\(화\) ~ 9\/16\(목\)/.test(r)), ranges.join(' | '));
+  assert.match(page.url(), /mode=free/);
+  await page.reload({ waitUntil: 'networkidle0' });
+  assert.equal(await page.$eval('input[name=mode][value=free]', (el) => el.checked), true);
+  assert.deepEqual(errors, []);
+  await page.close();
+});
+
+test('탑승권 여행 정보: 그 달 평년 기온·비행·시차, 추천 칩으로 목적지 변경', async () => {
+  const { page } = await open('?y=2027&b=2');
+  const facts = await text(page, '#plan > li:first-child [data-facts]');
+  assert.match(facts, /9월 날씨/);
+  assert.match(facts, /직항 \d시간대/);
+  assert.match(facts, /시차/);
+  const chip = await page.$('#plan > li:first-child [data-pick]:not(.on)');
+  if (chip) {
+    const id = await chip.evaluate((b) => b.dataset.pick);
+    await chip.click();
+    assert.equal(await page.$eval('#plan > li:first-child select', (s) => s.value), id);
+    assert.equal(new URL(await page.$eval('#plan > li:first-child [data-out=flight]', (a) => a.href)).searchParams.get('acity'), id);
+  }
+  // 도쿄 9월 평년값(JMA): 최고 27.5 → 28°, 최저 20.3 → 20°
+  await page.select('#plan > li:first-child select', 'tyo');
+  assert.match(await text(page, '#plan > li:first-child [data-facts]'), /28° \/ 20°/);
+  await page.close();
+});
