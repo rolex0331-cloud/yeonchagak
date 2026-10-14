@@ -14,7 +14,7 @@ const short = (iso) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8))}(${wee
 
 function header(prefix) {
   return `<header class="site-header"><div class="wrap header-in">
-  <a class="logo" href="${prefix}"><span class="logo-mark">각</span>연차각</a>
+  <a class="logo" href="${prefix}"><svg class="logo-mark" viewBox="0 0 40 30" aria-hidden="true"><rect x="1" y="22" width="38" height="4" rx="2" fill="#9FE1CB"/><circle cx="7" cy="15" r="6" fill="#E24B4A"/><circle cx="20" cy="15" r="6" fill="#1D9E75"/><circle cx="33" cy="15" r="6" fill="#E24B4A"/></svg>징검</a>
   <nav class="nav"><a href="${prefix}2027-holidays/">2027 공휴일·꿀조합</a><a href="${prefix}guide/">연차 규칙</a><a href="${prefix}about/">소개</a></nav>
 </div></header>`;
 }
@@ -76,7 +76,7 @@ function yearPage(year) {
   const best = r.top[0];
   const body = `
 <h1>${year}년 공휴일 총정리와 연차 꿀조합</h1>
-<p class="lead">${year}년 관공서 공휴일 ${list.length}일(대체공휴일 ${subs}일 포함) 중 평일에 해당하는 날은 ${realHolidays}일입니다. 아래 조합은 주 5일(토·일 휴무), 공휴일·대체공휴일·노동절에 모두 쉬는 직장을 기준으로 연차각 계산기가 산출한 결과입니다.</p>
+<p class="lead">${year}년 관공서 공휴일 ${list.length}일(대체공휴일 ${subs}일 포함) 중 평일에 해당하는 날은 ${realHolidays}일입니다. 아래 조합은 주 5일(토·일 휴무), 공휴일·대체공휴일·노동절에 모두 쉬는 직장을 기준으로 징검 계산기가 산출한 결과입니다.</p>
 <p class="cta"><a class="btn primary" href="../?y=${year}&b=15&m=5&l=4">내 남은 연차로 다시 계산하기 →</a></p>
 <p class="note">회사가 공휴일에 쉬지 않거나(5인 미만 사업장 등), 창립기념일·연차 불가 기간이 있다면 결과가 달라집니다. 계산기에서 조건을 바꾸면 그 기준으로 다시 계산됩니다.</p>
 
@@ -104,7 +104,7 @@ function yearPage(year) {
 <p class="cta"><a class="btn primary" href="../?y=${year}&b=15&m=5&l=4">내 조건으로 계산하기 →</a></p>
 `;
   return page({
-    title: `${year}년 공휴일·대체공휴일 총정리와 연차 꿀조합 | 연차각`,
+    title: `${year}년 공휴일·대체공휴일 총정리와 연차 꿀조합 | 징검`,
     desc: `${year}년 공휴일 ${list.length}일과 대체공휴일 ${subs}일 전체 목록, 연차 ${best.cost}일로 ${best.length}일 쉬는 ${formatRange(best)} 등 연차 효율 순위. 내 연차 일수로 바로 다시 계산할 수 있습니다.`,
     path: `${year}-holidays/`,
     body,
@@ -121,7 +121,7 @@ function write(rel, content) {
 const LAW = 'https://www.law.go.kr/';
 const guideBody = `
 <h1>연차·공휴일 규칙, 계산 전에 알아둘 것</h1>
-<p class="lead">연차각 계산 결과는 회사가 어떤 날을 쉬는지에 따라 달라집니다. 계산기의 체크 항목이 무엇을 뜻하는지 정리했습니다. 법률 상담이 아니며, 최종 기준은 회사 취업규칙과 법령 원문입니다.</p>
+<p class="lead">징검 계산 결과는 회사가 어떤 날을 쉬는지에 따라 달라집니다. 계산기의 체크 항목이 무엇을 뜻하는지 정리했습니다. 법률 상담이 아니며, 최종 기준은 회사 취업규칙과 법령 원문입니다.</p>
 
 <h2>연차는 몇 일인가요?</h2>
 <ul>
@@ -141,7 +141,7 @@ const guideBody = `
 <p>2026년 4월 국무회의에서 노동절과 제헌절을 관공서 공휴일로 정하는 규정 개정안이 의결됐다고 보도됐습니다. 노동절의 사업장 규모별 적용, 휴일 대체 가능 여부는 자료마다 설명이 다르므로 회사 기준이나 고용노동부 상담(국번 없이 1350)으로 확인하세요. 회사가 노동절에 쉬지 않는다면 계산기의 '노동절에 쉰다'를 끄면 됩니다.</p>
 
 <h2>임시공휴일</h2>
-<p>정부가 임시공휴일을 새로 지정하면 연차각은 공휴일 데이터 확인 후 반영합니다. 반영 전까지는 결과에 포함되지 않으니, 뉴스에서 임시공휴일 소식을 들었다면 계산기 고급 설정의 <b>회사 휴무일</b>에 직접 추가해 계산할 수 있습니다.</p>
+<p>정부가 임시공휴일을 새로 지정하면 징검은 공휴일 데이터 확인 후 반영합니다. 반영 전까지는 결과에 포함되지 않으니, 뉴스에서 임시공휴일 소식을 들었다면 계산기 고급 설정의 <b>회사 휴무일</b>에 직접 추가해 계산할 수 있습니다.</p>
 
 <h2>법령 원문</h2>
 <ul>
@@ -153,8 +153,8 @@ const guideBody = `
 `;
 
 const aboutBody = `
-<h1>연차각 소개</h1>
-<p class="lead">연차각은 남은 연차를 공휴일·주말 사이 어디에 넣어야 가장 길게 쉴 수 있는지 계산하는 무료 웹 도구입니다.</p>
+<h1>징검 소개</h1>
+<p class="lead">징검은 남은 연차를 공휴일·주말 사이 어디에 넣어야 가장 길게 쉴 수 있는지 계산하는 무료 웹 도구입니다.</p>
 
 <h2>계산 방법</h2>
 <ul>
@@ -190,8 +190,8 @@ const aboutBody = `
 
 const yearPages = YEARS.filter((y) => y >= 2027);
 for (const y of yearPages) write(`${y}-holidays/index.html`, yearPage(y));
-write('guide/index.html', page({ title: '연차·공휴일·대체공휴일 규칙 정리 (5인 미만, 노동절) | 연차각', desc: '연차 15일 발생 기준, 5인 미만 사업장의 공휴일, 대체공휴일 기준, 노동절·제헌절 공휴일 지정까지 연차 계획 전에 알아둘 규칙을 법령 출처와 함께 정리했습니다.', path: 'guide/', body: guideBody }));
-write('about/index.html', page({ title: '연차각 소개 · 계산 방법 · 개인정보 안내', desc: '연차각의 연차 최적화 계산 방법, 공휴일 데이터 출처, 개인정보 처리와 제휴 고지 안내.', path: 'about/', body: aboutBody }));
+write('guide/index.html', page({ title: '연차·공휴일·대체공휴일 규칙 정리 (5인 미만, 노동절) | 징검', desc: '연차 15일 발생 기준, 5인 미만 사업장의 공휴일, 대체공휴일 기준, 노동절·제헌절 공휴일 지정까지 연차 계획 전에 알아둘 규칙을 법령 출처와 함께 정리했습니다.', path: 'guide/', body: guideBody }));
+write('about/index.html', page({ title: '징검 소개 · 계산 방법 · 개인정보 안내', desc: '징검의 연차 최적화 계산 방법, 공휴일 데이터 출처, 개인정보 처리와 제휴 고지 안내.', path: 'about/', body: aboutBody }));
 
 const urls = ['', ...yearPages.map((y) => `${y}-holidays/`), 'guide/', 'about/'];
 write(

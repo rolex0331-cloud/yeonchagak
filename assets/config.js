@@ -3,7 +3,7 @@
 // 분석 이벤트는 전송하지 않음.
 
 export const SITE = {
-  name: '연차각',
+  name: '징검',
   url: 'https://rolex0331-cloud.github.io/yeonchagak/',
   contact: 'https://github.com/rolex0331-cloud/yeonchagak/issues',
 };

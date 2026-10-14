@@ -55,7 +55,7 @@ a { color: var(--brand); }
 .site-header { background: var(--card); border-bottom: 1px solid var(--line); }
 .header-in { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; flex-wrap: wrap; }
 .logo { font-weight: 800; font-size: 20px; color: var(--ink); text-decoration: none; display: flex; align-items: center; gap: 8px; }
-.logo-mark { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; background: var(--brand); color: var(--brand-ink); font-size: 16px; }
+.logo-mark { width: 40px; height: 30px; flex: 0 0 auto; }
 .nav { display: flex; gap: 14px; flex-wrap: wrap; font-size: 15px; }
 .nav a { color: var(--muted); text-decoration: none; padding: 6px 0; }
 .nav a:hover { color: var(--brand); }

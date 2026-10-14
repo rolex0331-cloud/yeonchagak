@@ -321,7 +321,7 @@ async function copyText(text) {
 
 $('dl-ics').addEventListener('click', () => {
   if (!result?.plan.length) return toast('저장할 연휴가 없습니다.');
-  const blob = new Blob([toICS(result.plan, { title: `연차각 ${state.year} 연휴 계획` })], { type: 'text/calendar;charset=utf-8' });
+  const blob = new Blob([toICS(result.plan, { title: `징검 ${state.year} 연휴 계획` })], { type: 'text/calendar;charset=utf-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `yeonchagak-${state.year}.ics`;
@@ -345,10 +345,10 @@ $('copy-request').addEventListener('click', async () => {
 $('share').addEventListener('click', async () => {
   const url = location.href;
   const best = result?.plan?.slice().sort((a, b) => b.length - a.length)[0];
-  const text = best ? `내 연차 ${result.planLeaveUsed}일로 ${result.planDaysOff}일 쉬는 ${state.year}년 플랜 (최장 ${best.length}일 연휴)` : '연차각 — 내 연차로 가장 길게 쉬는 날짜';
+  const text = best ? `내 연차 ${result.planLeaveUsed}일로 ${result.planDaysOff}일 쉬는 ${state.year}년 플랜 (최장 ${best.length}일 연휴)` : '징검 — 내 연차로 가장 길게 쉬는 날짜';
   if (navigator.share) {
     try {
-      await navigator.share({ title: '연차각', text, url });
+      await navigator.share({ title: '징검', text, url });
       track('share');
       return;
     } catch (e) {

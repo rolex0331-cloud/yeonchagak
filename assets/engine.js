@@ -319,7 +319,7 @@ export function formatRange(w) {
 }
 
 // iCalendar(.ics) 생성. 종일 일정의 DTEND는 다음날(배타적).
-export function toICS(plans, { title = '연차각', stamp = new Date() } = {}) {
+export function toICS(plans, { title = '징검', stamp = new Date() } = {}) {
   const pad = (iso) => iso.replace(/-/g, '');
   const next = (iso) => fromDayNum(toDayNum(iso) + 1);
   const dtstamp = stamp.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
